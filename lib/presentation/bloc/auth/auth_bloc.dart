@@ -1,4 +1,4 @@
-import 'package:bm_binus/constants.dart/users.dart';
+import 'package:bm_binus/data/models/user_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';

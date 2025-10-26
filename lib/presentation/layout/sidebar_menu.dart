@@ -1,11 +1,12 @@
-import 'package:bm_binus/features/auth/auth_bloc.dart';
-import 'package:bm_binus/features/auth/auth_state.dart';
+import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
+import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
+import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'bloc/sidebar_bloc.dart';
-import 'bloc/sidebar_event.dart';
-import 'bloc/sidebar_state.dart';
+import '../bloc/sidebar_bloc.dart';
+import '../bloc/sidebar_event.dart';
+import '../bloc/sidebar_state.dart';
 
 class SidebarMenu extends StatelessWidget {
   final bool isCollapsed;
@@ -87,6 +88,13 @@ class SidebarMenu extends StatelessWidget {
                       Icons.lock_person_rounded,
                     ),
                     buildItem("Settings", "/settings", Icons.settings),
+                    IconButton(
+                      icon: const Icon(Icons.logout),
+                      onPressed: () {
+                        context.read<AuthBloc>().add(LogoutRequested());
+                        context.go('/login');
+                      },
+                    ),
                   ];
                   break;
                 case 'bm':
