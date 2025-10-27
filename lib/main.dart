@@ -1,3 +1,4 @@
+import 'package:bm_binus/presentation/cubit/ui_cubit.dart';
 import 'package:bm_binus/presentation/routes/app_router.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +17,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final router = createRouter(authBloc);
 
-    return BlocProvider.value(
-      value: authBloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: authBloc),
+        BlocProvider(create: (_) => UiCubit()),
+      ],
       child: MaterialApp.router(
         title: 'Building Management',
         debugShowCheckedModeBanner: false,

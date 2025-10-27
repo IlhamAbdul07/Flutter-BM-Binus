@@ -7,7 +7,12 @@ class AuthState extends Equatable {
 
   const AuthState({required this.isAuthenticated, this.role, this.error});
 
-  AuthState copyWith({bool? isAuthenticated, String? role, String? error}) {
+  AuthState copyWith({
+    bool? isAuthenticated,
+    String? role,
+    String? error,
+    required bool isLoading,
+  }) {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       role: role ?? this.role,
