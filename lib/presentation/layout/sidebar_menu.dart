@@ -1,6 +1,7 @@
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
+import 'package:bm_binus/presentation/widgets/custom_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -75,6 +76,66 @@ class SidebarMenu extends StatelessWidget {
                 );
               }
 
+              Widget buildLogout(BuildContext context) {
+                return BlocListener<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    if (!state.isAuthenticated) {
+                      context.go('/login');
+                    }
+                  },
+                  child: InkWell(
+                    onTap: () {
+                      CustomDialog.show(
+                        context,
+                        icon: Icons.logout,
+                        iconColor: Colors.red,
+                        title: "Konfirmasi Logout",
+                        message: "Apakah kamu yakin ingin keluar?",
+                        confirmText: "Ya, keluar",
+                        confirmColor: Colors.red,
+                        cancelText: "Batal",
+                        cancelColor: Colors.black,
+                        onConfirm: () {
+                          context.read<AuthBloc>().add(LogoutRequested());
+                        },
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 8,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 16,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: isCollapsed
+                            ? MainAxisAlignment.center
+                            : MainAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.logout, color: Colors.white),
+                          if (!isCollapsed) ...[
+                            const SizedBox(width: 12),
+                            const Text(
+                              "Logout",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
               // 🎯 Tentukan menu berdasarkan role
               List<Widget> menuItems = [];
               switch (authState.role) {
@@ -88,13 +149,7 @@ class SidebarMenu extends StatelessWidget {
                       Icons.lock_person_rounded,
                     ),
                     buildItem("Settings", "/settings", Icons.settings),
-                    IconButton(
-                      icon: const Icon(Icons.logout),
-                      onPressed: () {
-                        context.read<AuthBloc>().add(LogoutRequested());
-                        context.go('/login');
-                      },
-                    ),
+                    buildLogout(context),
                   ];
                   break;
                 case 'bm':
@@ -109,6 +164,7 @@ class SidebarMenu extends StatelessWidget {
                       Icons.lock_person_rounded,
                     ),
                     buildItem("Settings", "/settings", Icons.settings),
+                    buildLogout(context),
                   ];
                   break;
                 case 'iss':
@@ -121,6 +177,7 @@ class SidebarMenu extends StatelessWidget {
                       Icons.lock_person_rounded,
                     ),
                     buildItem("Settings", "/settings", Icons.settings),
+                    buildLogout(context),
                   ];
                   break;
                 default:
