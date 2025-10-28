@@ -7495,9 +7495,9 @@ ve:function ve(a){this.a=a},
 afB:function afB(){},
 afA:function afA(a){this.a=a},
 afz:function afz(){},
-aOz(a){var s=null,r=A.aGS(a),q=A.mg(new A.aqm(),"/login"),p=t.yo,o=A.c([A.mg(new A.aqn(),"/dashboard"),A.mg(new A.aqo(),"/users"),A.mg(new A.aqp(),"/settings"),A.mg(new A.aqq(),"/ubahpassword"),A.mg(new A.aqr(),"/pengajuan"),A.mg(new A.aqs(),"/event"),A.mg(new A.aqt(),"/ahp")],p)
+aOz(a){var s=null,r=A.aGS(a),q=A.mg(new A.aqm(),"/"),p=t.yo,o=A.c([A.mg(new A.aqn(),"/dashboard"),A.mg(new A.aqo(),"/users"),A.mg(new A.aqp(),"/settings"),A.mg(new A.aqq(),"/ubahpassword"),A.mg(new A.aqr(),"/pengajuan"),A.mg(new A.aqs(),"/event"),A.mg(new A.aqt(),"/ahp")],p)
 q=A.c([q,new A.nb(new A.aqu(),new A.bh(s,t.b7),s,o,s)],p)
-return A.aGR(!1,s,s,s,s,"/login",s,s,s,!1,r,!0,s,!1,new A.Pq(new A.abe(q,new A.aqv(a),5)))},
+return A.aGR(!1,s,s,s,s,"/",s,s,s,!1,r,!0,s,!1,new A.Pq(new A.abe(q,new A.aqv(a),5)))},
 aGS(a){var s=new A.yT($.af())
 s.a15(a)
 return s},
@@ -39805,12 +39805,12 @@ $S:436}
 A.aqc.prototype={
 $0(){var s=this.a
 J.dK(A.cL(s,!1,t.tj),new A.jl())
-A.oW(s).lh("/login",null)},
+A.oW(s).lh("/",null)},
 $S:0}
 A.aqe.prototype={
 $0(){var s=this.a
 J.dK(A.cL(s,!1,t.tj),new A.jl())
-A.oW(s).lh("/login",null)},
+A.oW(s).lh("/",null)},
 $S:0}
 A.aqf.prototype={
 $1(a){var s=null
@@ -39855,7 +39855,7 @@ if(!q)B.b.R(n,A.c([B.hT,B.TP],o))
 return A.avg(s,A.a3Z(!1,!0,A.j0(s,A.n_(n,B.a8,p,B.aC,0),B.C,s,s,new A.e5(B.z,s,s,r,s,s,B.bf),s,s,B.jg,B.n9,s,s,s),s,!0,s,s,s,s,s,s,s,s,new A.ado(a),s,s,s,s),s,new A.adp(),t.tj,t.FB)},
 $S:11}
 A.adp.prototype={
-$2(a,b){if(!b.a)A.oW(a).lh("/login",null)},
+$2(a,b){if(!b.a)A.oW(a).lh("/",null)},
 $S:105}
 A.ado.prototype={
 $0(){var s=this.a
@@ -40031,8 +40031,8 @@ A.afz.prototype={
 $0(){},
 $S:0}
 A.aqv.prototype={
-$2(a,b){var s=this.a.c.a,r=b.f==="/login"
-if(!s&&!r)return"/login"
+$2(a,b){var s=this.a.c.a,r=b.f==="/"
+if(!s&&!r)return"/"
 if(s&&r)return"/dashboard"
 return null},
 $S:251}
