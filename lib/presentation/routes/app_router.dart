@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:bm_binus/presentation/layout/main_layout.dart';
 import 'package:bm_binus/presentation/pages/ahp_page.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
-import 'package:bm_binus/presentation/pages/login_page.dart';
 import 'package:bm_binus/presentation/pages/change_pw_page.dart';
 import 'package:bm_binus/presentation/pages/dashboard_page.dart';
 import 'package:bm_binus/presentation/pages/event_data_page.dart';
+import 'package:bm_binus/presentation/pages/login_page.dart';
 import 'package:bm_binus/presentation/pages/pengajuan_page.dart';
 import 'package:bm_binus/presentation/pages/settings_page.dart';
 import 'package:bm_binus/presentation/pages/user_data_page.dart';
@@ -16,17 +16,17 @@ import 'package:go_router/go_router.dart';
 
 GoRouter createRouter(AuthBloc authBloc) {
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/',
     refreshListenable: GoRouterRefreshBloc(authBloc),
     redirect: (context, state) {
       final loggedIn = authBloc.state.isAuthenticated;
-      final loggingIn = state.fullPath == '/login';
-      if (!loggedIn && !loggingIn) return '/login';
+      final loggingIn = state.fullPath == '/';
+      if (!loggedIn && !loggingIn) return '/';
       if (loggedIn && loggingIn) return '/dashboard';
       return null;
     },
     routes: [
-      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+      GoRoute(path: '/', builder: (context, state) => const LoginPage()),
       ShellRoute(
         builder: (context, state, child) => MainLayout(child: child),
         routes: [

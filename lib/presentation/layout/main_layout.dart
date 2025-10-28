@@ -49,7 +49,7 @@ PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
         icon: const Icon(Icons.logout),
         onPressed: () {
           context.read<AuthBloc>().add(LogoutRequested());
-          context.go('/login');
+          context.go('/');
         },
       ),
     ],
@@ -68,7 +68,7 @@ PreferredSizeWidget buildAppBarMobile(BuildContext context) {
         icon: const Icon(Icons.logout),
         onPressed: () {
           context.read<AuthBloc>().add(LogoutRequested());
-          context.go('/login');
+          context.go('/');
         },
       ),
     ],

@@ -80,7 +80,7 @@ class SidebarMenu extends StatelessWidget {
                 return BlocListener<AuthBloc, AuthState>(
                   listener: (context, state) {
                     if (!state.isAuthenticated) {
-                      context.go('/login');
+                      context.go('/');
                     }
                   },
                   child: InkWell(
