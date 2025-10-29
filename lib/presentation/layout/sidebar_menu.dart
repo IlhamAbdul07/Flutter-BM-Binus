@@ -1,6 +1,7 @@
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
+import 'package:bm_binus/presentation/cubit/ui_cubit.dart';
 import 'package:bm_binus/presentation/widgets/custom_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,7 +12,8 @@ import '../bloc/sidebar_state.dart';
 
 class SidebarMenu extends StatelessWidget {
   final bool isCollapsed;
-  const SidebarMenu({super.key, this.isCollapsed = false});
+  final VoidCallback? onItemSelected;
+  const SidebarMenu({super.key, this.isCollapsed = false, this.onItemSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +32,17 @@ class SidebarMenu extends StatelessWidget {
 
           return BlocBuilder<SidebarBloc, SidebarState>(
             builder: (context, state) {
+              final uiState = context.watch<UiCubit>().state;
+              final isCollapsed = uiState.isSidebarCollapsed;
               // Helper builder menu item
               Widget buildItem(String label, String route, IconData icon) {
                 final selected = state.selectedRoute == route;
 
                 return InkWell(
                   onTap: () {
+                    if (!isCollapsed && Scaffold.of(context).isDrawerOpen) {
+                      Navigator.of(context).pop();
+                    }
                     context.read<SidebarBloc>().add(SelectPageEvent(route));
                     context.go(route);
                   },
@@ -51,26 +58,44 @@ class SidebarMenu extends StatelessWidget {
                       horizontal: 8,
                     ),
                     padding: const EdgeInsets.symmetric(
-                      vertical: 14,
+                      vertical: 5,
                       horizontal: 16,
                     ),
-                    child: Row(
-                      mainAxisAlignment: isCollapsed
-                          ? MainAxisAlignment.center
-                          : MainAxisAlignment.start,
-                      children: [
-                        Icon(icon, color: Colors.white),
-                        if (!isCollapsed) ...[
-                          const SizedBox(width: 12),
-                          Text(
-                            label,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? Colors.blueGrey[700]
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 5,
+                        horizontal: 2,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 5,
+                        horizontal: 10,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: isCollapsed
+                            ? MainAxisAlignment.start
+                            : MainAxisAlignment.start,
+                        children: [
+                          Icon(icon, color: Colors.white),
+                          SizedBox(width: 5),
+
+                          if (!isCollapsed) ...[
+                            const SizedBox(width: 12),
+                            Text(
+                              label,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 );
@@ -110,26 +135,40 @@ class SidebarMenu extends StatelessWidget {
                         horizontal: 8,
                       ),
                       padding: const EdgeInsets.symmetric(
-                        vertical: 14,
+                        vertical: 5,
                         horizontal: 16,
                       ),
-                      child: Row(
-                        mainAxisAlignment: isCollapsed
-                            ? MainAxisAlignment.center
-                            : MainAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.logout, color: Colors.white),
-                          if (!isCollapsed) ...[
-                            const SizedBox(width: 12),
-                            const Text(
-                              "Logout",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 5,
+                          horizontal: 2,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 5,
+                          horizontal: 10,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: isCollapsed
+                              ? MainAxisAlignment.start
+                              : MainAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.logout, color: Colors.white),
+                            SizedBox(width: 5),
+                            if (!isCollapsed) ...[
+                              const SizedBox(width: 12),
+                              const Text(
+                                "Logout",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
                               ),
-                            ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -148,7 +187,6 @@ class SidebarMenu extends StatelessWidget {
                       "/ubahpassword",
                       Icons.lock_person_rounded,
                     ),
-                    buildItem("Settings", "/settings", Icons.settings),
                     buildLogout(context),
                   ];
                   break;
@@ -163,7 +201,6 @@ class SidebarMenu extends StatelessWidget {
                       "/ubahpassword",
                       Icons.lock_person_rounded,
                     ),
-                    buildItem("Settings", "/settings", Icons.settings),
                     buildLogout(context),
                   ];
                   break;
@@ -176,7 +213,6 @@ class SidebarMenu extends StatelessWidget {
                       "/ubahpassword",
                       Icons.lock_person_rounded,
                     ),
-                    buildItem("Settings", "/settings", Icons.settings),
                     buildLogout(context),
                   ];
                   break;
@@ -186,7 +222,7 @@ class SidebarMenu extends StatelessWidget {
 
               return Column(
                 crossAxisAlignment: isCollapsed
-                    ? CrossAxisAlignment.center
+                    ? CrossAxisAlignment.start
                     : CrossAxisAlignment.start,
                 children: [const SizedBox(height: 40), ...menuItems],
               );

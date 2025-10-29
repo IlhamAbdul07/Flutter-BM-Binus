@@ -1,34 +1,57 @@
+import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
+import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        const Text(
-          "Dashboard Overview",
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 16,
-          runSpacing: 16,
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        return ListView(
+          padding: const EdgeInsets.all(24),
           children: [
-            _infoCard("Total Users", "100", Icons.people),
-            _infoCard(
-              "Analytical Hierarchy Property",
-              "50",
-              Icons.add_chart_outlined,
+            const Text(
+              "Dashboard Overview",
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
-            _infoCard("Event Complete", "430", Icons.event_available_outlined),
+            const SizedBox(height: 16),
+            Text(
+              'Hai, ${authState.email ?? 'User'} 👋',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Role: ${authState.role ?? '-'}',
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                _infoCard("Total Users", "100", Icons.people),
+                _infoCard(
+                  "Analytical Hierarchy Property",
+                  "50",
+                  Icons.add_chart_outlined,
+                ),
+                _infoCard(
+                  "Event Complete",
+                  "430",
+                  Icons.event_available_outlined,
+                ),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
+
+  //
 
   Widget _infoCard(String title, String value, IconData icon) {
     return Container(

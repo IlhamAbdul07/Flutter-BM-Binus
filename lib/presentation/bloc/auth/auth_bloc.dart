@@ -16,7 +16,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     if (user.email.isNotEmpty) {
-      emit(AuthState(isAuthenticated: true, role: user.role));
+      emit(
+        AuthState(isAuthenticated: true, role: user.role, email: user.email),
+      );
     } else {
       emit(
         const AuthState(

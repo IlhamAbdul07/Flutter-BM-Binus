@@ -1,11 +1,8 @@
 import 'package:bm_binus/core/constants.dart/custom_colors.dart';
 import 'package:bm_binus/presentation/bloc/sidebar_bloc.dart';
 import 'package:bm_binus/presentation/layout/sidebar_menu.dart';
-import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
-import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget child;
@@ -39,18 +36,32 @@ class MainLayout extends StatelessWidget {
 
 PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
   return AppBar(
-    title: const Text(
-      'Building Management',
-      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    title: Row(
+      spacing: 10,
+      children: [
+        Image.asset('assets/images/logo.png', height: 40),
+        const Text(
+          'Building Management',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ],
     ),
     backgroundColor: CustomColors.primary,
     actions: [
-      IconButton(
-        icon: const Icon(Icons.logout),
-        onPressed: () {
-          context.read<AuthBloc>().add(LogoutRequested());
-          context.go('/');
-        },
+      Padding(
+        padding: const EdgeInsets.only(right: 15),
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.notifications, color: Colors.white),
+              onPressed: () {},
+            ),
+            IconButton(
+              icon: const Icon(Icons.sunny, color: Colors.white),
+              onPressed: () {},
+            ),
+          ],
+        ),
       ),
     ],
   );
@@ -59,17 +70,24 @@ PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
 PreferredSizeWidget buildAppBarMobile(BuildContext context) {
   return AppBar(
     backgroundColor: CustomColors.primary,
-    title: const Text(
-      'Building Management',
-      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    title: Row(
+      spacing: 10,
+      children: [
+        Image.asset('assets/images/logo.png', height: 40),
+        const Text(
+          'Building Management',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ],
     ),
     actions: [
       IconButton(
-        icon: const Icon(Icons.logout),
-        onPressed: () {
-          context.read<AuthBloc>().add(LogoutRequested());
-          context.go('/');
-        },
+        icon: const Icon(Icons.notifications, color: Colors.white),
+        onPressed: () {},
+      ),
+      IconButton(
+        icon: const Icon(Icons.sunny, color: Colors.white),
+        onPressed: () {},
       ),
     ],
     leading: Builder(
