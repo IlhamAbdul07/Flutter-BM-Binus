@@ -101,6 +101,134 @@ class SidebarMenu extends StatelessWidget {
                 );
               }
 
+              Widget buildExpandableItem(
+                BuildContext context, // ✨ Perlu context untuk akses BLoC
+                SidebarState state, // ✨ State dari BLoC
+                bool isCollapsed, // ✨ Apakah sidebar collapsed
+                String menuId, // ✨ ID unik (misal: "event_management")
+                String label, // ✨ Label menu (misal: "Event Management")
+                IconData icon, // ✨ Icon menu
+                List<Map<String, dynamic>> subItems, // ✨ List submenu
+              ) {
+                // Cek apakah menu ini lagi dibuka
+                final isExpanded = state.expandedMenus.contains(menuId);
+
+                return Column(
+                  children: [
+                    // === PARENT MENU (Yang diklik untuk buka/tutup) ===
+                    InkWell(
+                      onTap: () {
+                        // Toggle expand/collapse
+                        context.read<SidebarBloc>().add(
+                          ToggleMenuExpansionEvent(menuId),
+                        );
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Icon + Label
+                            Row(
+                              children: [
+                                Icon(icon, color: Colors.white),
+                                if (!isCollapsed) ...[
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    label,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            // Arrow icon (expand_more/expand_less)
+                            if (!isCollapsed)
+                              Icon(
+                                isExpanded
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
+                                color: Colors.white,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // === SUBMENU ITEMS (Muncul kalau isExpanded = true) ===
+                    if (isExpanded && !isCollapsed)
+                      ...subItems.map((item) {
+                        // Cek apakah submenu ini yang aktif
+                        final selected = state.selectedRoute == item['route'];
+
+                        return InkWell(
+                          onTap: () {
+                            // Tutup drawer kalau di mobile
+                            if (Scaffold.of(context).isDrawerOpen) {
+                              Navigator.of(context).pop();
+                            }
+                            // Update selected route
+                            context.read<SidebarBloc>().add(
+                              SelectPageEvent(item['route']),
+                            );
+                            // Navigate
+                            context.go(item['route']);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? Colors.blueGrey[600]
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            // Indent ke kanan (biar keliatan submenu)
+                            margin: const EdgeInsets.only(
+                              left: 32,
+                              right: 8,
+                              top: 2,
+                              bottom: 2,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 16,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  item['icon'],
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  item['label'],
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                  ],
+                );
+              }
+
               Widget buildLogout(BuildContext context) {
                 return BlocListener<AuthBloc, AuthState>(
                   listener: (context, state) {
@@ -193,8 +321,32 @@ class SidebarMenu extends StatelessWidget {
                 case 'bm':
                   menuItems = [
                     buildItem("Dashboard", "/dashboard", Icons.dashboard),
-                    buildItem("Data User", "/users", Icons.people),
-                    buildItem("Data Event", "/event", Icons.event),
+                    buildItem(
+                      "Pengajuan",
+                      "/pengajuanevent",
+                      Icons.edit_document,
+                    ),
+                    buildExpandableItem(
+                      context,
+                      state, // State dari BLoC
+                      isCollapsed, // Apakah sidebar collapsed
+                      "master_data", // ID unik menu ini
+                      "Master Data", // Label
+                      Icons.storage_rounded, // Icon
+                      [
+                        // List submenu
+                        {
+                          'label': 'User Data',
+                          'route': '/users',
+                          'icon': Icons.people,
+                        },
+                        {
+                          'label': 'Event Type',
+                          'route': '/eventtype',
+                          'icon': Icons.list,
+                        },
+                      ],
+                    ),
                     buildItem("AHP", "/ahp", Icons.add_chart_sharp),
                     buildItem(
                       "Ubah Password",

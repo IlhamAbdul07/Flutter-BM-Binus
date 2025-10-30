@@ -4,9 +4,10 @@ import 'package:bm_binus/presentation/layout/main_layout.dart';
 import 'package:bm_binus/presentation/pages/add_event_page.dart';
 import 'package:bm_binus/presentation/pages/ahp_page.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
+import 'package:bm_binus/presentation/pages/bm_pengajuan_page.dart';
 import 'package:bm_binus/presentation/pages/change_pw_page.dart';
 import 'package:bm_binus/presentation/pages/dashboard_page.dart';
-import 'package:bm_binus/presentation/pages/event_data_page.dart';
+import 'package:bm_binus/presentation/pages/event_type_page.dart';
 import 'package:bm_binus/presentation/pages/forgot_password_page.dart';
 import 'package:bm_binus/presentation/pages/login_page.dart';
 import 'package:bm_binus/presentation/pages/pengajuan_page.dart';
@@ -52,12 +53,16 @@ GoRouter createRouter(AuthBloc authBloc) {
             builder: (context, state) => const ChangePwPage(),
           ),
           GoRoute(
+            path: '/pengajuanevent',
+            builder: (context, state) => const BmPengajuanPage(),
+          ),
+          GoRoute(
             path: '/pengajuan',
             builder: (context, state) => const PengajuanPage(),
           ),
           GoRoute(
-            path: '/event',
-            builder: (context, state) => const EventDataPage(),
+            path: '/eventtype',
+            builder: (context, state) => const EventTypePage(),
           ),
           GoRoute(
             path: '/addevent',

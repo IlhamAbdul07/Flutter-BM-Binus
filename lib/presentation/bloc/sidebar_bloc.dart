@@ -7,5 +7,20 @@ class SidebarBloc extends Bloc<SidebarEvent, SidebarState> {
     on<SelectPageEvent>((event, emit) {
       emit(state.copyWith(selectedRoute: event.route));
     });
+
+    on<ToggleMenuExpansionEvent>((event, emit) {
+      // Ambil list menu yang lagi dibuka
+      final newExpanded = Set<String>.from(state.expandedMenus);
+
+      // Kalau menu sudah dibuka, tutup. Kalau belum, buka.
+      if (newExpanded.contains(event.menuId)) {
+        newExpanded.remove(event.menuId); // Tutup menu
+      } else {
+        newExpanded.add(event.menuId); // Buka menu
+      }
+
+      // Emit state baru
+      emit(state.copyWith(expandedMenus: newExpanded));
+    });
   }
 }

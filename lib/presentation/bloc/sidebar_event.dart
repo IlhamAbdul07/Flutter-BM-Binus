@@ -15,3 +15,12 @@ class SelectPageEvent extends SidebarEvent {
   @override
   List<Object> get props => [route];
 }
+
+class ToggleMenuExpansionEvent extends SidebarEvent {
+  final String menuId;
+
+  const ToggleMenuExpansionEvent(this.menuId);
+
+  @override
+  List<Object> get props => [menuId];
+}
