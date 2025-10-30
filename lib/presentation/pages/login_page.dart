@@ -197,6 +197,20 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                             ),
+                            SizedBox(height: 8),
+                            InkWell(
+                              onTap: () {
+                                context.go('/lupapassword');
+                              },
+                              child: const Text(
+                                'Lupa Password ?',
+                                style: TextStyle(
+                                  color: CustomColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -351,6 +365,20 @@ class _LoginPageState extends State<LoginPage> {
                                 color: Colors.white,
                                 fontSize: 18,
                               ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        InkWell(
+                          onTap: () {
+                            context.go('/lupapassword');
+                          },
+                          child: const Text(
+                            'Lupa Password ?',
+                            style: TextStyle(
+                              color: CustomColors.primary,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
                             ),
                           ),
                         ),

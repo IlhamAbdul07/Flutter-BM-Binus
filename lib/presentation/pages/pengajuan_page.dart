@@ -73,12 +73,10 @@ class _PengajuanPageState extends State<PengajuanPage> {
                 SizedBox(
                   height: size.height * 0.075,
                   child: TextButton.icon(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(
-                        CustomColors.oranges,
-                      ),
-                      iconColor: MaterialStateProperty.all(Colors.white),
-                      iconSize: MaterialStateProperty.all(20.0),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: CustomColors.oranges,
+                      iconColor: Colors.white,
+                      iconSize: 20.0,
                     ),
                     onPressed: () {
                       context.go('/addevent');

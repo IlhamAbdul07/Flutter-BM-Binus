@@ -7,6 +7,7 @@ import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/pages/change_pw_page.dart';
 import 'package:bm_binus/presentation/pages/dashboard_page.dart';
 import 'package:bm_binus/presentation/pages/event_data_page.dart';
+import 'package:bm_binus/presentation/pages/forgot_password_page.dart';
 import 'package:bm_binus/presentation/pages/login_page.dart';
 import 'package:bm_binus/presentation/pages/pengajuan_page.dart';
 import 'package:bm_binus/presentation/pages/user_data_page.dart';
@@ -21,12 +22,20 @@ GoRouter createRouter(AuthBloc authBloc) {
     redirect: (context, state) {
       final loggedIn = authBloc.state.isAuthenticated;
       final loggingIn = state.fullPath == '/';
+      final forgotPassword = state.fullPath == '/lupapassword';
+
+      if (forgotPassword) return null;
+
       if (!loggedIn && !loggingIn) return '/';
       if (loggedIn && loggingIn) return '/dashboard';
       return null;
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const LoginPage()),
+      GoRoute(
+        path: '/lupapassword',
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
       ShellRoute(
         builder: (context, state, child) => MainLayout(child: child),
         routes: [
