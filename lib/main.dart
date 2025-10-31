@@ -1,3 +1,4 @@
+import 'package:bm_binus/presentation/bloc/notification/notification_bloc.dart';
 import 'package:bm_binus/presentation/cubit/ui_cubit.dart';
 import 'package:bm_binus/presentation/routes/app_router.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider.value(value: authBloc),
         BlocProvider(create: (_) => UiCubit()),
+        BlocProvider(create: (context) => NotificationBloc()),
       ],
       child: MaterialApp.router(
         title: 'Building Management',

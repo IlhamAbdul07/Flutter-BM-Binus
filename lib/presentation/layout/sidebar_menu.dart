@@ -6,9 +6,9 @@ import 'package:bm_binus/presentation/widgets/custom_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../bloc/sidebar_bloc.dart';
-import '../bloc/sidebar_event.dart';
-import '../bloc/sidebar_state.dart';
+import '../bloc/sidebar/sidebar_bloc.dart';
+import '../bloc/sidebar/sidebar_event.dart';
+import '../bloc/sidebar/sidebar_state.dart';
 
 class SidebarMenu extends StatelessWidget {
   final bool isCollapsed;
