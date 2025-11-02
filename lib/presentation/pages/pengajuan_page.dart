@@ -4,6 +4,9 @@ import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_state.dart';
+import 'package:bm_binus/presentation/bloc/pengajuan/priority_bloc.dart';
+import 'package:bm_binus/presentation/bloc/pengajuan/priority_event.dart';
+import 'package:bm_binus/presentation/bloc/pengajuan/priority_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -403,26 +406,40 @@ class PrioritySwitchButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue.shade200),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.swap_vert, color: Colors.blue.shade700),
-          const SizedBox(width: 8),
-          Text(
-            'Priority Mode',
-            style: TextStyle(
-              color: Colors.blue.shade700,
-              fontWeight: FontWeight.bold,
+    final size = MediaQuery.of(context).size;
+
+    return BlocBuilder<PriorityBloc, PriorityState>(
+      builder: (context, state) {
+        return SizedBox(
+          height: size.height * 0.075,
+          child: TextButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: state.usePriority
+                  ? CustomColors.oranges
+                  : Colors.grey,
+              iconColor: Colors.white,
+              iconSize: 20.0,
             ),
+            onPressed: state.isLoading
+                ? null
+                : () {
+                    context.read<PriorityBloc>().add(
+                      TogglePriorityEvent(!state.usePriority),
+                    );
+                  },
+            label: Text(
+              state.usePriority ? "Priority: ON" : "Priority: OFF",
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            icon: state.usePriority
+                ? Icon(Icons.star, color: const Color.fromARGB(255, 3, 71, 127))
+                : Icon(Icons.star_border),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
