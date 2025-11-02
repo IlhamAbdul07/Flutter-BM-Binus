@@ -1,12 +1,18 @@
 import 'package:bm_binus/core/constants.dart/custom_colors.dart';
+import 'package:bm_binus/core/constants.dart/ui_helpers.dart';
+import 'package:bm_binus/data/dummy/komentar_data.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_state.dart';
+import 'package:bm_binus/presentation/widgets/custom_dialog.dart';
+import 'package:bm_binus/presentation/widgets/custom_input_dialog.dart';
+import 'package:bm_binus/presentation/widgets/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:bm_binus/data/models/event_model.dart';
+import 'package:bm_binus/data/models/komentar_model.dart';
 
 class EventDetailPage extends StatefulWidget {
   final EventModel event;
@@ -19,6 +25,7 @@ class EventDetailPage extends StatefulWidget {
 
 class _EventDetailPageState extends State<EventDetailPage> {
   final _formKey = GlobalKey<FormState>();
+  final _komentarController = TextEditingController();
 
   late TextEditingController _staffController;
   late TextEditingController _eventController;
@@ -32,10 +39,20 @@ class _EventDetailPageState extends State<EventDetailPage> {
   late DateTime _tglSelesai;
   bool _isUpdating = false;
 
+  late List<KomentarModel> _komentarList;
+
+  // Dummy file list
+  final List<Map<String, String>> _uploadedFiles = [
+    {'name': 'proposal_event.pdf', 'extension': 'PDF'},
+    {'name': 'budget_plan.xlsx', 'extension': 'XLSX'},
+    {'name': 'venue_photo.jpg', 'extension': 'JPG'},
+  ];
+
   @override
   void initState() {
     super.initState();
     _initializeControllers();
+    _loadKomentar();
   }
 
   void _initializeControllers() {
@@ -56,6 +73,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
     );
   }
 
+  void _loadKomentar() {
+    _komentarList = KomentarData.getKomentarForEvent(widget.event.no);
+  }
+
   @override
   void dispose() {
     _staffController.dispose();
@@ -65,6 +86,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
     _tglSelesaiController.dispose();
     _eventTipeController.dispose();
     _statusController.dispose();
+    _komentarController.dispose();
     super.dispose();
   }
 
@@ -103,7 +125,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
         status: _statusController.text,
       );
 
-      // Trigger update event (hanya snackbar)
       context.read<EventBloc>().add(UpdateEvent(updatedEvent));
     }
   }
@@ -122,9 +143,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              // Trigger delete event (hanya snackbar)
               context.read<EventBloc>().add(DeleteEvent(widget.event.no));
-              // Langsung kembali ke pengajuan page
               context.pop();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -135,39 +154,69 @@ class _EventDetailPageState extends State<EventDetailPage> {
     );
   }
 
+  void _handleKirimKomentar() {
+    if (_komentarController.text.trim().isEmpty) {
+      CustomSnackBar.show(
+        context,
+        icon: Icons.error,
+        title: 'WARNING',
+        message: 'Komentar tidak boleh kosong',
+        color: Colors.orange,
+      );
+      return;
+    }
+
+    CustomSnackBar.show(
+      context,
+      icon: Icons.error,
+      title: 'SUKSES',
+      message: 'Komentar berhasil dikirim!',
+      color: Colors.green,
+    );
+    _komentarController.clear();
+    FocusScope.of(context).unfocus();
+  }
+
+  void _handleUploadFile() {
+    CustomSnackBar.show(
+      context,
+      icon: Icons.error,
+      title: 'INFO',
+      message: 'Upload file - Fitur akan segera tersedia',
+      color: Colors.blue,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail Pengajuan Event'),
-        backgroundColor: CustomColors.oranges,
-        foregroundColor: Colors.white,
+        title: const Text(
+          'Detail Pengajuan Event',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: BlocListener<EventBloc, EventState>(
         listener: (context, state) {
           if (state is EventOperationSuccess) {
             setState(() => _isUpdating = false);
 
-            // Tampil snackbar sukses
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-                duration: const Duration(seconds: 2),
-              ),
+            CustomSnackBar.show(
+              context,
+              icon: Icons.error,
+              title: 'SUKSES',
+              message: state.message,
+              color: Colors.green,
             );
-
-            // TIDAK pop, tetap di halaman detail
-            // Data di form tetap bisa diedit lagi
           } else if (state is EventError) {
             setState(() => _isUpdating = false);
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 2),
-              ),
+            CustomSnackBar.show(
+              context,
+              icon: Icons.error,
+              title: 'Error',
+              message: state.message,
+              color: Colors.red,
             );
           }
         },
@@ -300,7 +349,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   label: 'Status',
                   icon: Icons.flag,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
                 // Action Buttons
                 Row(
@@ -349,9 +398,464 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     ),
                   ],
                 ),
+
+                const SizedBox(height: 40),
+                const Divider(thickness: 2),
+                const SizedBox(height: 24),
+
+                // 📎 SECTION FILE UPLOAD
+                _buildFileUploadSection(),
+
+                const SizedBox(height: 40),
+                const Divider(thickness: 2),
+                const SizedBox(height: 24),
+
+                // 💬 SECTION KOMENTAR
+                Row(
+                  children: [
+                    const Icon(Icons.comment_outlined, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Komentar',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${_komentarList.length}',
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // List Komentar
+                if (_komentarList.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 64,
+                            color: Colors.grey.shade300,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Belum ada komentar',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _komentarList.length,
+                    itemBuilder: (context, index) {
+                      final komentar = _komentarList[index];
+                      return _buildKomentarCard(komentar);
+                    },
+                  ),
+                const SizedBox(height: 24),
+
+                // Form Input Komentar
+                Card(
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _komentarController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: 'Tulis komentar Anda...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton.icon(
+                            onPressed: _handleKirimKomentar,
+                            icon: const Icon(Icons.send, size: 18),
+                            label: const Text('Kirim Komentar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFileUploadSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.attach_file, color: Colors.deepPurple),
+                const SizedBox(width: 8),
+                const Text(
+                  'File Lampiran',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${_uploadedFiles.length}',
+                    style: TextStyle(
+                      color: Colors.deepPurple.shade700,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            OutlinedButton.icon(
+              onPressed: _handleUploadFile,
+              icon: const Icon(Icons.upload_file, size: 18),
+              label: const Text('Upload'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.deepPurple,
+                side: BorderSide(color: Colors.deepPurple.shade300),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _uploadedFiles.map((file) {
+              return _buildFileCard(
+                fileName: file['name']!,
+                extension: file['extension']!,
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFileCard({required String fileName, required String extension}) {
+    final fileColor = UIHelpers.getFileColor(extension);
+    final fileIcon = UIHelpers.getFileIcon(extension);
+
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: fileColor.withOpacity(0.3)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(
+            8.0,
+          ), // reduced padding to give more space
+          child: SizedBox(
+            // ensure fixed height so Positioned works nicely
+            height: 100,
+            child: Stack(
+              children: [
+                // Positioned close button in the top-right corner with minimal padding
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.black,
+                      size: 14,
+                    ),
+                    onPressed: () {
+                      CustomDialog.show(
+                        context,
+                        icon: Icons.delete,
+                        iconColor: Colors.red,
+                        title: "Konfirmasi Hapus File",
+                        message: "Apakah anda yakin menghapus file ini?",
+                        confirmText: "Ya, hapus",
+                        confirmColor: Colors.red,
+                        cancelText: "Batal",
+                        cancelColor: Colors.black,
+                        onConfirm: () {
+                          setState(() {
+                            _uploadedFiles.removeWhere(
+                              (f) => f['name'] == fileName,
+                            );
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+
+                // Main content
+                Positioned.fill(
+                  left: 0,
+                  right: 0,
+
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // give a tiny top spacing so content doesn't overlap the button
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: fileColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(fileIcon, color: fileColor, size: 24),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: fileColor,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              extension,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        fileName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKomentarCard(KomentarModel komentar) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: UIHelpers.getRoleColor(komentar.role),
+                  radius: 20,
+                  child: Text(
+                    komentar.nama.substring(0, 1).toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        komentar.nama,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: UIHelpers.getRoleColor(
+                            komentar.role,
+                          ).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          komentar.role,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: UIHelpers.getRoleColor(komentar.role),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  DateFormat('dd MMM, HH:mm').format(komentar.tanggal),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              komentar.komentar,
+              style: const TextStyle(fontSize: 14, height: 1.5),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 16),
+                  onPressed: () {
+                    CustomInputDialog.show(
+                      context,
+                      icon: Icons.edit,
+                      iconColor: Colors.blue,
+                      title: 'Edit',
+                      message: 'Masukkan data baru',
+                      hintText: 'Ketik di sini...',
+                      initialValue:
+                          '', // Atau isi dengan value yang ingin diedit
+                      confirmText: 'Simpan',
+                      confirmColor: Colors.blue,
+                      cancelText: 'Batal',
+                      cancelColor: Colors.grey,
+                      onConfirm: (value) {
+                        // Handle hasil input
+                        print('Input value: $value');
+                        // Contoh: update state, simpan ke database, dll
+                      },
+                      onCancel: () {
+                        print('Dialog dibatalkan');
+                      },
+                    );
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, size: 16),
+                  onPressed: () {
+                    CustomDialog.show(
+                      context,
+                      icon: Icons.delete,
+                      iconColor: Colors.red,
+                      title: "Hapus Komentar",
+                      message: "Apakah anda yakin ingin menghapus komentar?",
+                      confirmText: "Ya, Hapus",
+                      confirmColor: Colors.red,
+                      cancelText: "Batal",
+                      cancelColor: Colors.black,
+                    );
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  color: Colors.red,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
