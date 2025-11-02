@@ -1,8 +1,5 @@
 import 'package:bm_binus/core/constants.dart/custom_colors.dart';
-import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
-import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
 import 'package:bm_binus/presentation/cubit/ui_cubit.dart';
-import 'package:bm_binus/presentation/widgets/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

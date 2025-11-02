@@ -130,11 +130,11 @@ class SidebarMenu extends StatelessWidget {
                         ),
                         margin: const EdgeInsets.symmetric(
                           vertical: 4,
-                          horizontal: 8,
+                          horizontal: 5,
                         ),
                         padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 16,
+                          vertical: 8,
+                          horizontal: 30,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -321,11 +321,7 @@ class SidebarMenu extends StatelessWidget {
                 case 'bm':
                   menuItems = [
                     buildItem("Dashboard", "/dashboard", Icons.dashboard),
-                    buildItem(
-                      "Pengajuan",
-                      "/pengajuanevent",
-                      Icons.edit_document,
-                    ),
+                    buildItem("Pengajuan", "/pengajuan", Icons.edit_document),
                     buildExpandableItem(
                       context,
                       state, // State dari BLoC
