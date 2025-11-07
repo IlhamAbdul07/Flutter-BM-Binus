@@ -73,7 +73,6 @@ class EventModel {
     );
   }
 
-  @override
   List<Object?> get props => [
     no,
     staff,

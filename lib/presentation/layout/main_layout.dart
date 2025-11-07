@@ -1,8 +1,15 @@
-import 'package:bm_binus/core/constants.dart/custom_colors.dart';
+import 'dart:developer';
+
+import 'package:bm_binus/core/constants/custom_colors.dart';
+import 'package:bm_binus/core/notifiers/session_notifier.dart';
+import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
+import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_bloc.dart';
+import 'package:bm_binus/presentation/bloc/notification/notification_event.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_state.dart';
 import 'package:bm_binus/presentation/bloc/sidebar/sidebar_bloc.dart';
 import 'package:bm_binus/presentation/layout/sidebar_menu.dart';
+import 'package:bm_binus/presentation/widgets/custom_dialog.dart';
 import 'package:bm_binus/presentation/widgets/notification_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,6 +45,7 @@ class MainLayout extends StatelessWidget {
 }
 
 PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
+  context.read<NotificationBloc>().add(LoadNotificationsEvent());
   return AppBar(
     title: Row(
       spacing: 10,
@@ -56,7 +64,29 @@ PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
         child: Row(
           children: [
             // ✨ WRAP DENGAN BlocBuilder
-            BlocBuilder<NotificationBloc, NotificationState>(
+            BlocConsumer<NotificationBloc, NotificationState>(
+              listener: (context, state) {
+                if (state.sessionExp) {
+                  log("Session Expired: ${sessionExpiredNotifier.value}");
+                  CustomDialog.show(
+                    context,
+                    icon: Icons.logout,
+                    iconColor: Colors.red,
+                    title: "Session Expired",
+                    message: state.errorMessage!,
+                    confirmText: "Ya, Saya akan login.",
+                    confirmColor: Colors.red,
+                    cancelText: "Batal",
+                    cancelColor: Colors.black,
+                    onConfirm: () {
+                      context.read<AuthBloc>().add(LogoutRequested());
+                      context.read<NotificationBloc>().add(ResetSessionEvent());
+                    },
+                    barrierDismissible: false,
+                    notCancel: true
+                  );
+                }
+              },
               builder: (context, state) {
                 return Stack(
                   children: [
@@ -113,6 +143,7 @@ PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
 }
 
 PreferredSizeWidget buildAppBarMobile(BuildContext context) {
+  context.read<NotificationBloc>().add(LoadNotificationsEvent());
   return AppBar(
     backgroundColor: CustomColors.primary,
     title: Row(
@@ -127,7 +158,29 @@ PreferredSizeWidget buildAppBarMobile(BuildContext context) {
     ),
     actions: [
       // ✨ Icon Notifikasi dengan Badge
-      BlocBuilder<NotificationBloc, NotificationState>(
+      BlocConsumer<NotificationBloc, NotificationState>(
+        listener: (context, state) {
+          if (state.sessionExp) {
+            log("Session Expired: ${sessionExpiredNotifier.value}");
+            CustomDialog.show(
+              context,
+              icon: Icons.logout,
+              iconColor: Colors.red,
+              title: "Session Expired",
+              message: state.errorMessage!,
+              confirmText: "Ya, Saya akan login.",
+              confirmColor: Colors.red,
+              cancelText: "Batal",
+              cancelColor: Colors.black,
+              onConfirm: () {
+                context.read<AuthBloc>().add(LogoutRequested());
+                context.read<NotificationBloc>().add(ResetSessionEvent());
+              },
+              barrierDismissible: false,
+              notCancel: true
+            );
+          }
+        },
         builder: (context, state) {
           return Stack(
             children: [

@@ -134,11 +134,7 @@ class NotificationDialog extends StatelessWidget {
         backgroundColor: notif.isRead
             ? Colors.grey.shade300
             : Colors.blue.shade100,
-        child: Icon(
-          _getNotificationIcon(notif.type),
-          color: notif.isRead ? Colors.grey.shade600 : Colors.blue.shade700,
-          size: 24,
-        ),
+        child: _getNotificationIcon(notif.type, notif.isRead)
       ),
       title: Text(
         notif.title,
@@ -229,20 +225,44 @@ class NotificationDialog extends StatelessWidget {
     );
   }
 
-  IconData _getNotificationIcon(NotificationType type) {
+  Icon _getNotificationIcon(NotificationType type, bool isRead) {
     switch (type) {
-      case NotificationType.info:
-        return Icons.info_outline;
-      case NotificationType.success:
-        return Icons.check_circle_outline;
-      case NotificationType.warning:
-        return Icons.warning_amber;
-      case NotificationType.error:
-        return Icons.error_outline;
-      case NotificationType.message:
-        return Icons.message;
       case NotificationType.event:
-        return Icons.event;
+        return Icon(
+          Icons.event,
+          size: 24,
+          color: isRead ? Colors.grey.shade600 : Colors.green.shade700,
+        );
+      case NotificationType.edit:
+        return Icon(
+          Icons.edit,
+          size: 24,
+          color: isRead ? Colors.grey.shade600 : Colors.yellow.shade700,
+        );
+      case NotificationType.delete:
+        return Icon(
+          Icons.delete,
+          size: 24,
+          color: isRead ? Colors.grey.shade600 : Colors.red.shade700,
+        );
+      case NotificationType.file:
+        return Icon(
+          Icons.file_copy,
+          size: 24,
+          color: isRead ? Colors.grey.shade600 : Colors.blue.shade700,
+        );
+      case NotificationType.comment:
+        return Icon(
+          Icons.message,
+          size: 24,
+          color: isRead ? Colors.grey.shade600 : Colors.blue.shade700,
+        );
+      case NotificationType.info:
+        return Icon(
+          Icons.info_outline,
+          size: 24,
+          color: isRead ? Colors.grey.shade600 : Colors.blue.shade700,
+        );
     }
   }
 
@@ -265,9 +285,6 @@ class NotificationDialog extends StatelessWidget {
 
   /// Helper function untuk show dialog
   static void show(BuildContext context) {
-    // Load notifikasi pas dialog dibuka
-    context.read<NotificationBloc>().add(LoadNotificationsEvent());
-
     showDialog(
       context: context,
       barrierDismissible: true,

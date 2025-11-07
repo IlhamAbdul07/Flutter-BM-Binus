@@ -18,3 +18,16 @@ class LoginRequested extends AuthEvent {
 }
 
 class LogoutRequested extends AuthEvent {}
+
+class CheckAuthSession extends AuthEvent {}
+
+class ForgotPasswordRequested extends AuthEvent {
+  final String email;
+
+  const ForgotPasswordRequested(this.email);
+
+  @override
+  List<Object> get props => [email];
+}
+
+class ResetForgotPasswordState extends AuthEvent {}

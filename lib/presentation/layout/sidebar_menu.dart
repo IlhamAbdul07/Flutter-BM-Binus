@@ -143,6 +143,7 @@ class SidebarMenu extends StatelessWidget {
                             Row(
                               children: [
                                 Icon(icon, color: Colors.white),
+                                SizedBox(width: 5),
                                 if (!isCollapsed) ...[
                                   const SizedBox(width: 12),
                                   Text(
@@ -196,7 +197,7 @@ class SidebarMenu extends StatelessWidget {
                             ),
                             // Indent ke kanan (biar keliatan submenu)
                             margin: const EdgeInsets.only(
-                              left: 32,
+                              left: 50,
                               right: 8,
                               top: 2,
                               bottom: 2,
@@ -305,8 +306,8 @@ class SidebarMenu extends StatelessWidget {
 
               // 🎯 Tentukan menu berdasarkan role
               List<Widget> menuItems = [];
-              switch (authState.role) {
-                case 'staff':
+              switch (authState.roleName) {
+                case 'Staf Binus':
                   menuItems = [
                     buildItem("Dashboard", "/dashboard", Icons.dashboard),
                     buildItem("Pengajuan", "/pengajuan", Icons.edit_document),
@@ -318,7 +319,7 @@ class SidebarMenu extends StatelessWidget {
                     buildLogout(context),
                   ];
                   break;
-                case 'bm':
+                case 'Building Management':
                   menuItems = [
                     buildItem("Dashboard", "/dashboard", Icons.dashboard),
                     buildItem("Pengajuan", "/pengajuan", Icons.edit_document),
@@ -352,7 +353,7 @@ class SidebarMenu extends StatelessWidget {
                     buildLogout(context),
                   ];
                   break;
-                case 'iss':
+                case 'Admin ISS':
                   menuItems = [
                     buildItem("Dashboard", "/dashboard", Icons.dashboard),
                     buildItem("Pengajuan", "/pengajuan", Icons.edit_document),

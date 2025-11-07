@@ -1,4 +1,4 @@
-import 'package:bm_binus/core/constants.dart/custom_colors.dart';
+import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
@@ -96,35 +96,33 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row(
-                      spacing: 16,
-                      children: [
-                        Image.asset('assets/images/logo.png', width: 75),
-                        const Text(
-                          'Building Management',
-                          style: TextStyle(
-                            fontSize: 25,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                    Image.asset('assets/images/logo.png', width: 100),
                     const SizedBox(height: 16),
                     Card(
                       elevation: 4,
                       child: Padding(
-                        padding: const EdgeInsets.all(32.0),
+                        padding: const EdgeInsets.only(
+                          top: 15,
+                          left: 40,
+                          right: 40,
+                          bottom: 55,
+                        ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('Login', style: TextStyle(fontSize: 26)),
+                            const Text(
+                              'Building Management',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             const SizedBox(height: 24),
 
                             TextField(
                               controller: usernameController,
                               decoration: const InputDecoration(
-                                labelText: 'Username',
+                                labelText: 'Email',
                               ),
                             ),
 
@@ -155,47 +153,50 @@ class _LoginPageState extends State<LoginPage> {
                                     final user = usernameController.text;
                                     final pass = passwordController.text;
                                     context.read<UiCubit>().setLoading(true);
-                                    context.read<AuthBloc>().add(
-                                      LoginRequested(user, pass),
-                                    );
+                                    context.read<AuthBloc>().add(LoginRequested(user, pass));
+                                    // context.read<UiCubit>().setLoading(false);
                                   },
                                 );
                               },
                             ),
 
                             const SizedBox(height: 24),
-
-                            if (state.error != null)
-                              Text(
-                                state.error!,
-                                style: const TextStyle(color: Colors.red),
-                              ),
-
                             const SizedBox(height: 8),
 
-                            SizedBox(
-                              width: double.infinity,
-                              height: 45,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: CustomColors.oranges,
-                                ),
-                                onPressed: () {
-                                  final user = usernameController.text;
-                                  final pass = passwordController.text;
-                                  context.read<UiCubit>().setLoading(true);
-                                  context.read<AuthBloc>().add(
-                                    LoginRequested(user, pass),
-                                  );
-                                },
-                                child: const Text(
-                                  'Masuk',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
+                            BlocBuilder<UiCubit, UiState>(
+                              builder: (context, uiState){
+                                return SizedBox(
+                                  width: double.infinity,
+                                  height: 40,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: CustomColors.oranges,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          12,
+                                        ),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      final user = usernameController.text;
+                                      final pass = passwordController.text;
+                                      context.read<UiCubit>().setLoading(true);
+                                      context.read<AuthBloc>().add(LoginRequested(user, pass));
+                                      // context.read<UiCubit>().setLoading(false);
+                                    },
+                                    child: uiState.isLoading
+                                      ? const SizedBox(
+                                          height: 18,
+                                          width: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Text('Masuk', style: TextStyle(color: Colors.white,fontSize: 20)),
                                   ),
-                                ),
-                              ),
+                                );
+                              }
                             ),
                             SizedBox(height: 8),
                             InkWell(
@@ -217,17 +218,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-              ),
-              BlocBuilder<UiCubit, UiState>(
-                builder: (context, uiState) {
-                  if (!uiState.isLoading) return const SizedBox.shrink();
-                  return Container(
-                    color: Colors.black.withOpacity(0.5),
-                    child: const Center(
-                      child: CircularProgressIndicator(color: Colors.white),
-                    ),
-                  );
-                },
               ),
             ],
           );
@@ -306,7 +296,7 @@ class _LoginPageState extends State<LoginPage> {
                         TextField(
                           controller: usernameController,
                           decoration: const InputDecoration(
-                            labelText: 'Username',
+                            labelText: 'Email',
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -336,37 +326,37 @@ class _LoginPageState extends State<LoginPage> {
                         ),
 
                         const SizedBox(height: 24),
-
-                        if (state.error != null)
-                          Text(
-                            state.error!,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-
                         const SizedBox(height: 8),
 
-                        SizedBox(
-                          width: double.infinity,
-                          height: 45,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: CustomColors.oranges,
-                            ),
-                            onPressed: () {
-                              final user = usernameController.text;
-                              final pass = passwordController.text;
-                              context.read<AuthBloc>().add(
-                                LoginRequested(user, pass),
-                              );
-                            },
-                            child: const Text(
-                              'Masuk',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
+                        BlocBuilder<UiCubit, UiState>(
+                          builder: (context, uiState){
+                            return SizedBox(
+                              width: double.infinity,
+                              height: 45,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: CustomColors.oranges,
+                                ),
+                                onPressed: () {
+                                  final user = usernameController.text;
+                                  final pass = passwordController.text;
+                                  context.read<UiCubit>().setLoading(true);
+                                  context.read<AuthBloc>().add(LoginRequested(user, pass));
+                                  // context.read<UiCubit>().setLoading(false);
+                                },
+                                child: uiState.isLoading
+                                  ? const SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text('Masuk', style: TextStyle(color: Colors.white,fontSize: 20)),
                               ),
-                            ),
-                          ),
+                            );
+                          }
                         ),
                         SizedBox(height: 8),
                         InkWell(

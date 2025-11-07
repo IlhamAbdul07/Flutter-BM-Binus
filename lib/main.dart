@@ -1,3 +1,4 @@
+import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/priority_bloc.dart';
@@ -8,8 +9,10 @@ import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   final authBloc = AuthBloc();
+  authBloc.add(CheckAuthSession());
   runApp(MyApp(authBloc: authBloc));
 }
 
@@ -27,8 +30,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => UiCubit()),
         BlocProvider(create: (context) => NotificationBloc()),
         BlocProvider<PriorityBloc>(
-          create: (context) =>
-              PriorityBloc()..add(LoadPriorityEvent()), // load saat init
+          create: (context) => PriorityBloc()..add(LoadPriorityEvent()),
         ),
         BlocProvider(create: (context) => EventBloc()),
       ],

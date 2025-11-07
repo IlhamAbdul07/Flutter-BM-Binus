@@ -3,11 +3,11 @@
 // Enum = tipe-tipe notifikasi yang ada
 enum NotificationType {
   info, // Notifikasi informasi biasa
-  success, // Notifikasi sukses (hijau)
-  warning, // Notifikasi peringatan (kuning)
-  error, // Notifikasi error (merah)
-  message, // Notifikasi pesan
+  file, // Notifikasi error (merah)
+  comment, // Notifikasi pesan
   event, // Notifikasi event
+  edit,
+  delete,
 }
 
 // Model = struktur data notifikasi
@@ -73,69 +73,5 @@ class NotificationModel {
       'isRead': isRead,
       'type': type.toString().split('.').last,
     };
-  }
-}
-
-// =====================================================
-// DUMMY DATA (untuk testing, nanti bisa diganti dari API)
-// =====================================================
-class NotificationDummyData {
-  static List<NotificationModel> getDummyNotifications() {
-    return [
-      NotificationModel(
-        id: '1',
-        title: 'Event Baru Ditambahkan',
-        message:
-            'Event "Workshop Flutter Advanced" telah ditambahkan ke sistem oleh Admin',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-        isRead: false,
-        type: NotificationType.event,
-      ),
-      NotificationModel(
-        id: '2',
-        title: 'Pengajuan Disetujui ✅',
-        message:
-            'Pengajuan event "Seminar AI & Machine Learning" Anda telah disetujui oleh Kepala Departemen',
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        isRead: false,
-        type: NotificationType.success,
-      ),
-      NotificationModel(
-        id: '3',
-        title: 'Reminder Meeting',
-        message:
-            'Jangan lupa hadiri meeting evaluasi event hari ini jam 14.00 di Ruang Rapat A',
-        timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-        isRead: false,
-        type: NotificationType.warning,
-      ),
-      NotificationModel(
-        id: '4',
-        title: 'Pesan dari Admin',
-        message:
-            'Harap segera melengkapi data profil Anda untuk kelancaran proses verifikasi',
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
-        isRead: true,
-        type: NotificationType.message,
-      ),
-      NotificationModel(
-        id: '5',
-        title: 'Update Sistem',
-        message:
-            'Sistem akan maintenance pada tanggal 5 November 2025 pukul 00.00 - 03.00 WIB',
-        timestamp: DateTime.now().subtract(const Duration(days: 2)),
-        isRead: true,
-        type: NotificationType.info,
-      ),
-      NotificationModel(
-        id: '6',
-        title: 'Pengajuan Ditolak',
-        message:
-            'Pengajuan event "Workshop React" ditolak. Alasan: Budget tidak mencukupi',
-        timestamp: DateTime.now().subtract(const Duration(days: 3)),
-        isRead: true,
-        type: NotificationType.error,
-      ),
-    ];
   }
 }

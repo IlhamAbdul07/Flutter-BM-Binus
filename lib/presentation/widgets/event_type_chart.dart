@@ -12,11 +12,12 @@ class EventTypeChart extends StatelessWidget {
     final maxValue = dashboard.typeList.isNotEmpty
         ? dashboard.typeList.map((e) => e.count).reduce((a, b) => a > b ? a : b)
         : 0;
+    final maxY = ((maxValue + 4) ~/ 5) * 5; 
 
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
-        maxY: maxValue.toDouble() + 10,
+        maxY: maxY.toDouble(),
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
@@ -37,15 +38,22 @@ class EventTypeChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               getTitlesWidget: (value, meta) {
-                if (value.toInt() >= 0 &&
-                    value.toInt() < dashboard.typeList.length) {
+                if (value.toInt() >= 0 && value.toInt() < dashboard.typeList.length) {
+                  final title = dashboard.typeList[value.toInt()].type;
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      dashboard.typeList[value.toInt()].type,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                    child: SizedBox(
+                      width: 80, // atur lebar area teks agar bisa wrap
+                      child: Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 3, // batas 3 baris
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
                       ),
                     ),
                   );
@@ -77,7 +85,7 @@ class EventTypeChart extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: 10,
+          horizontalInterval: 1,
           getDrawingHorizontalLine: (value) {
             return FlLine(color: Colors.grey[300], strokeWidth: 1);
           },

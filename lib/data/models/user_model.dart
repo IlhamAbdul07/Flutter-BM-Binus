@@ -1,13 +1,31 @@
-class Users {
+class User {
+  final int id;
+  final String name;
   final String email;
-  final String password;
-  final String role;
+  final int roleId;
+  final String roleName;
 
-  Users({required this.email, required this.password, required this.role});
+  User({required this.id, required this.name, required this.email, required this.roleId, required this.roleName});
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
+
+    return User(
+      id: data['id'] ?? 0,
+      name: data['name'] ?? '',
+      email: data['email'] ?? '',
+      roleId: data['role']?['id'] ?? 0,
+      roleName: data['role']?['name'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'role_id': roleId,
+      'role_name': roleName,
+    };
+  }
 }
-
-final List<Users> DetailUser = [
-  Users(email: 'test@gmail.com', password: 'test123', role: 'staff'),
-  Users(email: 'angel@gmail.com', password: 'angel123', role: 'bm'),
-  Users(email: 'admin@gmail.com', password: 'admin123', role: 'iss'),
-];

@@ -6,12 +6,14 @@ import 'package:equatable/equatable.dart';
 class NotificationState extends Equatable {
   final List<NotificationModel> notifications; // List semua notifikasi
   final bool isLoading; // Lagi loading atau tidak
+  final bool sessionExp;
   final String? errorMessage; // Pesan error (kalau ada)
   final int unreadCount; // Jumlah notifikasi belum dibaca
 
   const NotificationState({
     this.notifications = const [],
     this.isLoading = false,
+    this.sessionExp = false,
     this.errorMessage,
     this.unreadCount = 0,
   });
@@ -21,6 +23,7 @@ class NotificationState extends Equatable {
     return const NotificationState(
       notifications: [],
       isLoading: false,
+      sessionExp: false,
       errorMessage: null,
       unreadCount: 0,
     );
@@ -44,19 +47,25 @@ class NotificationState extends Equatable {
 
   // State error (ada error)
   NotificationState error(String message) {
-    return copyWith(isLoading: false, errorMessage: message);
+    return copyWith(isLoading: false, sessionExp: false, errorMessage: message);
+  }
+
+  NotificationState sessionExpired(String message) {
+    return copyWith(isLoading: false, sessionExp: true, errorMessage: message);
   }
 
   // Method untuk copy state dengan perubahan tertentu
   NotificationState copyWith({
     List<NotificationModel>? notifications,
     bool? isLoading,
+    bool? sessionExp,
     String? errorMessage,
     int? unreadCount,
   }) {
     return NotificationState(
       notifications: notifications ?? this.notifications,
       isLoading: isLoading ?? this.isLoading,
+      sessionExp: sessionExp ?? this.sessionExp,
       errorMessage: errorMessage,
       unreadCount: unreadCount ?? this.unreadCount,
     );
@@ -66,6 +75,7 @@ class NotificationState extends Equatable {
   List<Object?> get props => [
     notifications,
     isLoading,
+    sessionExp,
     errorMessage,
     unreadCount,
   ];

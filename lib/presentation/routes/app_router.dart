@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bm_binus/data/models/event_model.dart';
+import 'package:bm_binus/data/models/event_type_model.dart';
+import 'package:bm_binus/data/models/users_model.dart';
 import 'package:bm_binus/presentation/layout/main_layout.dart';
 import 'package:bm_binus/presentation/pages/add_event_page.dart';
 import 'package:bm_binus/presentation/pages/ahp_page.dart';
@@ -8,11 +10,13 @@ import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/pages/change_pw_page.dart';
 import 'package:bm_binus/presentation/pages/dashboard_page.dart';
 import 'package:bm_binus/presentation/pages/event_detail_page.dart';
+import 'package:bm_binus/presentation/pages/event_type_form_page.dart';
 import 'package:bm_binus/presentation/pages/event_type_page.dart';
 import 'package:bm_binus/presentation/pages/forgot_password_page.dart';
 import 'package:bm_binus/presentation/pages/login_page.dart';
 import 'package:bm_binus/presentation/pages/pengajuan_page.dart';
 import 'package:bm_binus/presentation/pages/user_data_page.dart';
+import 'package:bm_binus/presentation/pages/user_form_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -66,6 +70,26 @@ GoRouter createRouter(AuthBloc authBloc) {
             builder: (context, state) {
               final event = state.extra as EventModel;
               return EventDetailPage(event: event);
+            },
+          ),
+          GoRoute(
+            path: '/event-type-form',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>;
+              final mode = extra['mode'] as FormMode;
+              final eventType = extra['eventType'] as EventTypeModel?;
+
+              return EventTypeFormPage(mode: mode, eventType: eventType);
+            },
+          ),
+          GoRoute(
+            path: '/user-form',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>;
+              final mode = extra['mode'] as UserFormMode;
+              final user = extra['user'] as UserModel?;
+
+              return UserFormPage(mode: mode, user: user);
             },
           ),
           GoRoute(

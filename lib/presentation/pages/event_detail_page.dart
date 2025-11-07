@@ -1,5 +1,5 @@
-import 'package:bm_binus/core/constants.dart/custom_colors.dart';
-import 'package:bm_binus/core/constants.dart/ui_helpers.dart';
+import 'package:bm_binus/core/constants/custom_colors.dart';
+import 'package:bm_binus/core/constants/ui_helpers.dart';
 import 'package:bm_binus/data/dummy/komentar_data.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
@@ -871,7 +871,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         filled: true,
         fillColor: Colors.grey[50],
       ),

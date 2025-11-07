@@ -9,6 +9,9 @@ abstract class NotificationEvent extends Equatable {
   List<Object> get props => [];
 }
 
+class SessionExpiredInternalEvent extends NotificationEvent {}
+class ResetSessionEvent extends NotificationEvent {}
+
 // Event: Load/ambil data notifikasi (pas pertama kali buka)
 class LoadNotificationsEvent extends NotificationEvent {}
 

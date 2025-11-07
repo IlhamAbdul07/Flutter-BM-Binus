@@ -1,4 +1,4 @@
-import 'package:bm_binus/core/constants.dart/custom_colors.dart';
+import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:flutter/material.dart';
 
 class AddEventPage extends StatefulWidget {

@@ -12,6 +12,7 @@ class CustomDialog extends StatelessWidget {
   final VoidCallback? onConfirm;
   final VoidCallback? onCancel;
   final bool barrierDismissible;
+  final bool notCancel;
 
   const CustomDialog({
     super.key,
@@ -26,6 +27,7 @@ class CustomDialog extends StatelessWidget {
     this.onConfirm,
     this.onCancel,
     this.barrierDismissible = true,
+    this.notCancel = false
   });
 
   @override
@@ -69,23 +71,25 @@ class CustomDialog extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: cancelColor),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  if (!notCancel)...[
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: cancelColor),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          foregroundColor: cancelColor,
+                          backgroundColor: Colors.transparent,
                         ),
-                        foregroundColor: cancelColor,
-                        backgroundColor: Colors.transparent,
+                        onPressed: () {
+                          Navigator.pop(context);
+                          if (onCancel != null) onCancel!();
+                        },
+                        child: Text(cancelText),
                       ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        if (onCancel != null) onCancel!();
-                      },
-                      child: Text(cancelText),
                     ),
-                  ),
+                  ],
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
@@ -128,6 +132,7 @@ class CustomDialog extends StatelessWidget {
     VoidCallback? onConfirm,
     VoidCallback? onCancel,
     bool barrierDismissible = true,
+    bool notCancel = false
   }) {
     showDialog(
       context: context,
@@ -143,6 +148,7 @@ class CustomDialog extends StatelessWidget {
         cancelColor: cancelColor,
         onConfirm: onConfirm,
         onCancel: onCancel,
+        notCancel: notCancel,
       ),
     );
   }

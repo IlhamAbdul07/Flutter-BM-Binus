@@ -1,4 +1,4 @@
-import 'package:bm_binus/core/constants.dart/custom_colors.dart';
+import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
@@ -7,20 +7,21 @@ import 'package:bm_binus/presentation/bloc/pengajuan/event_state.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/priority_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/priority_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/priority_state.dart';
+import 'package:bm_binus/presentation/widgets/priority_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_table_view/material_table_view.dart';
 import 'package:intl/intl.dart';
 import 'package:bm_binus/data/models/event_model.dart';
-
+ 
 class PengajuanPage extends StatefulWidget {
   const PengajuanPage({super.key});
-
+ 
   @override
   State<PengajuanPage> createState() => _PengajuanPageState();
 }
-
+ 
 class _PengajuanPageState extends State<PengajuanPage> {
   @override
   void initState() {
@@ -28,9 +29,9 @@ class _PengajuanPageState extends State<PengajuanPage> {
     // Load events saat page dibuka
     context.read<EventBloc>().add(LoadEvents());
   }
-
+ 
   String _fmt(DateTime date) => DateFormat('dd MMM yyyy').format(date);
-
+ 
   // 🎨 Fungsi untuk warna status
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -46,21 +47,21 @@ class _PengajuanPageState extends State<PengajuanPage> {
         return Colors.grey;
     }
   }
-
+ 
   // 🎯 Fungsi untuk handle klik row
   void _onRowTap(EventModel event) {
     // Set selected event di BLoC
     context.read<EventBloc>().add(SelectEvent(event));
-
+ 
     // Navigate ke detail page dengan data
     context.push('/event-detail', extra: event);
   }
-
+ 
   @override
   Widget build(BuildContext context) {
-    // final size = MediaQuery.of(context).size;
     const rowHeight = 56.0;
-
+ 
+    // ✅ MODIFIKASI 1: Tetap pakai TableColumn
     final columns = <TableColumn>[
       TableColumn(width: 56.0), // No
       TableColumn(width: 160.0), // Nama Staf
@@ -70,17 +71,16 @@ class _PengajuanPageState extends State<PengajuanPage> {
       TableColumn(width: 140.0), // Tgl Selesai
       TableColumn(width: 140.0), // Event Tipe
       TableColumn(width: 140.0), // Tgl Dibuat
-      TableColumn(
-        width: 120.0,
-        sticky: true,
-        freezePriority: 100,
-      ), // Status (freeze)
+      TableColumn(width: 120.0), // Status (akan di-freeze)
     ];
-
-    return Scaffold(
-      body: Column(
+ 
+    // Hitung total width untuk scrollable columns
+ 
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
         children: [
-          // 📌 HEADER SECTION
+          // 📌 HEADER SECTION (tidak ada perubahan)
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: Row(
@@ -92,13 +92,21 @@ class _PengajuanPageState extends State<PengajuanPage> {
                 ),
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, authState) {
-                    // Switch case berdasarkan role
-                    switch (authState.role) {
-                      case 'staff':
+                    switch (authState.roleName) {
+                      case 'Staf Binus':
                         return const AddEventButton();
-                      case 'bm':
-                        return const PrioritySwitchButton();
-                      case 'iss':
+                      case 'Building Management':
+                        final eventState = context.watch<EventBloc>().state;
+                        List<EventModel> data = [];
+ 
+                        if (eventState is EventLoaded) {
+                          data = eventState.events;
+                        } else if (eventState is EventOperationSuccess) {
+                          data = eventState.events;
+                        }
+ 
+                        return PrioritySwitchButton(data: data);
+                      case 'Admin ISS':
                         return const SizedBox.shrink();
                       default:
                         return const SizedBox.shrink();
@@ -108,7 +116,7 @@ class _PengajuanPageState extends State<PengajuanPage> {
               ],
             ),
           ),
-
+ 
           // 🔹 TABLE SECTION dengan BLoC
           Expanded(
             child: BlocConsumer<EventBloc, EventState>(
@@ -132,12 +140,12 @@ class _PengajuanPageState extends State<PengajuanPage> {
                 }
               },
               builder: (context, state) {
-                // Loading State
+                // Loading State (tidak ada perubahan)
                 if (state is EventLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
-                // Error State
+ 
+                // Error State (tidak ada perubahan)
                 if (state is EventError) {
                   return Center(
                     child: Column(
@@ -165,16 +173,16 @@ class _PengajuanPageState extends State<PengajuanPage> {
                     ),
                   );
                 }
-
-                // Get data dari state
+ 
+                // Get data dari state (tidak ada perubahan)
                 List<EventModel> data = [];
                 if (state is EventLoaded) {
                   data = state.events;
                 } else if (state is EventOperationSuccess) {
                   data = state.events;
                 }
-
-                // Empty State
+ 
+                // Empty State (tidak ada perubahan)
                 if (data.isEmpty) {
                   return Center(
                     child: Column(
@@ -197,174 +205,444 @@ class _PengajuanPageState extends State<PengajuanPage> {
                     ),
                   );
                 }
-
-                // ✅ TABLE dengan Data
+ 
+                // ✅ MODIFIKASI 2: TABLE dengan Frozen Column dan Scrollbar
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Scrollbar(
-                    thumbVisibility: true,
-                    interactive: true,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: SizedBox(
-                        width: 1300,
-                        child: TableView.builder(
-                          columns: columns,
-                          rowCount: data.length,
-                          rowHeight: rowHeight,
-                          headerHeight: rowHeight,
-
-                          // 📋 HEADER
-                          headerBuilder: (context, contentBuilder) {
-                            final titles = [
-                              'No',
-                              'Nama Staf',
-                              'Nama Event',
-                              'Lokasi Event',
-                              'Tgl Mulai',
-                              'Tgl Selesai',
-                              'Event Tipe',
-                              'Tgl Dibuat',
-                              'Status',
-                            ];
-                            return contentBuilder(context, (ctx, col) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8.0,
-                                ),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    titles[col],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            });
-                          },
-
-                          // 📊 ROW dengan KLIK
-                          rowBuilder: (context, row, contentBuilder) {
-                            final item = data[row];
-
-                            return InkWell(
-                              onTap: () => _onRowTap(item), // 👈 KLIK ROW
-                              hoverColor: Colors.orange.shade50, // Hover effect
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: Colors.grey.shade200,
-                                      width: 1,
-                                    ),
-                                  ),
-                                ),
-                                child: contentBuilder(context, (ctx, col) {
-                                  Widget cellContent;
-
-                                  switch (col) {
-                                    case 0:
-                                      cellContent = Text(
-                                        '${item.no}',
-                                        style: const TextStyle(fontSize: 13),
-                                      );
-                                      break;
-                                    case 1:
-                                      cellContent = Text(
-                                        item.staff,
-                                        style: const TextStyle(fontSize: 13),
-                                      );
-                                      break;
-                                    case 2:
-                                      cellContent = Text(
-                                        item.event,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Card(
+                          elevation: 2,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              // Hitung lebar scrollable columns
+                              final scrollableWidth = columns
+                                  .sublist(0, 8)
+                                  .fold<double>(
+                                    0,
+                                    (sum, col) => sum + col.width,
+                                  );
+ 
+                              // Controller untuk sinkronisasi scroll
+                              final ScrollController horizontalController =
+                                  ScrollController();
+                              final ScrollController verticalController =
+                                  ScrollController();
+                              final ScrollController frozenVerticalController =
+                                  ScrollController();
+ 
+                              // Listener untuk sinkronisasi scroll vertikal
+                              verticalController.addListener(() {
+                                if (frozenVerticalController.hasClients) {
+                                  frozenVerticalController.jumpTo(
+                                    verticalController.offset,
+                                  );
+                                }
+                              });
+ 
+                              frozenVerticalController.addListener(() {
+                                if (verticalController.hasClients) {
+                                  verticalController.jumpTo(
+                                    frozenVerticalController.offset,
+                                  );
+                                }
+                              });
+ 
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // ✅ Scrollable Columns (8 kolom pertama)
+                                  Expanded(
+                                    child: Scrollbar(
+                                      controller: horizontalController,
+                                      thumbVisibility: true,
+                                      interactive: true,
+                                      thickness: 12,
+                                      radius: const Radius.circular(6),
+                                      child: SingleChildScrollView(
+                                        controller: horizontalController,
+                                        scrollDirection: Axis.horizontal,
+                                        child: SizedBox(
+                                          width: scrollableWidth,
+                                          child: Column(
+                                            children: [
+                                              // Header untuk scrollable columns
+                                              Container(
+                                                height: rowHeight,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey.shade100,
+                                                  border: Border(
+                                                    bottom: BorderSide(
+                                                      color:
+                                                          Colors.grey.shade300,
+                                                      width: 2,
+                                                    ),
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  children:
+                                                      [
+                                                        'No',
+                                                        'Nama Staf',
+                                                        'Nama Event',
+                                                        'Lokasi Event',
+                                                        'Tgl Mulai',
+                                                        'Tgl Selesai',
+                                                        'Event Tipe',
+                                                        'Tgl Dibuat',
+                                                      ].asMap().entries.map((
+                                                        entry,
+                                                      ) {
+                                                        return Container(
+                                                          width:
+                                                              columns[entry.key]
+                                                                  .width,
+                                                          padding:
+                                                              const EdgeInsets.symmetric(
+                                                                horizontal: 8.0,
+                                                              ),
+                                                          child: Align(
+                                                            alignment: Alignment
+                                                                .centerLeft,
+                                                            child: Text(
+                                                              entry.value,
+                                                              style: const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 14,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      }).toList(),
+                                                ),
+                                              ),
+                                              // Body untuk scrollable columns
+                                              Expanded(
+                                                child: ListView.builder(
+                                                  controller:
+                                                      verticalController,
+                                                  physics:
+                                                      const ClampingScrollPhysics(),
+                                                  itemCount: data.length,
+                                                  itemBuilder: (context, index) {
+                                                    final item = data[index];
+                                                    return InkWell(
+                                                      onTap: () =>
+                                                          _onRowTap(item),
+                                                      hoverColor:
+                                                          Colors.orange.shade50,
+                                                      child: Container(
+                                                        height: rowHeight,
+                                                        decoration: BoxDecoration(
+                                                          border: Border(
+                                                            bottom: BorderSide(
+                                                              color: Colors
+                                                                  .grey
+                                                                  .shade200,
+                                                              width: 1,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        child: Row(
+                                                          children: [
+                                                            // Kolom 0: No
+                                                            Container(
+                                                              width: columns[0]
+                                                                  .width,
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        12.0,
+                                                                  ),
+                                                              child: Text(
+                                                                '${item.no}',
+                                                                style:
+                                                                    const TextStyle(
+                                                                      fontSize:
+                                                                          13,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                            // Kolom 1: Nama Staf
+                                                            Container(
+                                                              width: columns[1]
+                                                                  .width,
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        12.0,
+                                                                  ),
+                                                              child: Text(
+                                                                item.staff,
+                                                                style:
+                                                                    const TextStyle(
+                                                                      fontSize:
+                                                                          13,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                            // Kolom 2: Nama Event
+                                                            Container(
+                                                              width: columns[2]
+                                                                  .width,
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        12.0,
+                                                                  ),
+                                                              child: Text(
+                                                                item.event,
+                                                                style: const TextStyle(
+                                                                  fontSize: 13,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            // Kolom 3: Lokasi Event
+                                                            Container(
+                                                              width: columns[3]
+                                                                  .width,
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        12.0,
+                                                                  ),
+                                                              child: Text(
+                                                                item.lokasi,
+                                                                style:
+                                                                    const TextStyle(
+                                                                      fontSize:
+                                                                          13,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                            // Kolom 4: Tgl Mulai
+                                                            Container(
+                                                              width: columns[4]
+                                                                  .width,
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        12.0,
+                                                                  ),
+                                                              child: Text(
+                                                                _fmt(
+                                                                  item.tglMulai,
+                                                                ),
+                                                                style:
+                                                                    const TextStyle(
+                                                                      fontSize:
+                                                                          13,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                            // Kolom 5: Tgl Selesai
+                                                            Container(
+                                                              width: columns[5]
+                                                                  .width,
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        12.0,
+                                                                  ),
+                                                              child: Text(
+                                                                _fmt(
+                                                                  item.tglSelesai,
+                                                                ),
+                                                                style:
+                                                                    const TextStyle(
+                                                                      fontSize:
+                                                                          13,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                            // Kolom 6: Event Tipe
+                                                            Container(
+                                                              width: columns[6]
+                                                                  .width,
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        12.0,
+                                                                  ),
+                                                              child: Text(
+                                                                item.eventTipe,
+                                                                style:
+                                                                    const TextStyle(
+                                                                      fontSize:
+                                                                          13,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                            // Kolom 7: Tgl Dibuat
+                                                            Container(
+                                                              width: columns[7]
+                                                                  .width,
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8.0,
+                                                                    vertical:
+                                                                        12.0,
+                                                                  ),
+                                                              child: Text(
+                                                                _fmt(
+                                                                  item.tglDibuat,
+                                                                ),
+                                                                style:
+                                                                    const TextStyle(
+                                                                      fontSize:
+                                                                          13,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      );
-                                      break;
-                                    case 3:
-                                      cellContent = Text(
-                                        item.lokasi,
-                                        style: const TextStyle(fontSize: 13),
-                                      );
-                                      break;
-                                    case 4:
-                                      cellContent = Text(
-                                        _fmt(item.tglMulai),
-                                        style: const TextStyle(fontSize: 13),
-                                      );
-                                      break;
-                                    case 5:
-                                      cellContent = Text(
-                                        _fmt(item.tglSelesai),
-                                        style: const TextStyle(fontSize: 13),
-                                      );
-                                      break;
-                                    case 6:
-                                      cellContent = Text(
-                                        item.eventTipe,
-                                        style: const TextStyle(fontSize: 13),
-                                      );
-                                      break;
-                                    case 7:
-                                      cellContent = Text(
-                                        _fmt(item.tglDibuat),
-                                        style: const TextStyle(fontSize: 13),
-                                      );
-                                      break;
-                                    case 8:
-                                      // 🎨 STATUS BADGE dengan WARNA
-                                      cellContent = Center(
-                                        child: Container(
+                                      ),
+                                    ),
+                                  ),
+ 
+                                  // ✅ Frozen "Status" Column (tetap di kanan)
+                                  Container(
+                                    width: columns[8].width,
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        left: BorderSide(
+                                          color: Colors.grey.shade300,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      color: Colors.grey.shade50,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        // Header Status
+                                        Container(
+                                          height: rowHeight,
                                           padding: const EdgeInsets.symmetric(
-                                            vertical: 6,
-                                            horizontal: 12,
+                                            horizontal: 8.0,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: _getStatusColor(item.status),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
+                                            color: Colors.grey.shade100,
+                                            border: Border(
+                                              bottom: BorderSide(
+                                                color: Colors.grey.shade300,
+                                                width: 2,
+                                              ),
                                             ),
                                           ),
-                                          child: Text(
-                                            item.status.toUpperCase(),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 11,
+                                          child: const Align(
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              'Status',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      );
-                                      break;
-                                    default:
-                                      cellContent = const SizedBox.shrink();
-                                  }
-
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8.0,
-                                      vertical: 12.0,
+                                        // Status Cells
+                                        Expanded(
+                                          child: ListView.builder(
+                                            controller:
+                                                frozenVerticalController,
+                                            physics:
+                                                const ClampingScrollPhysics(),
+                                            itemCount: data.length,
+                                            itemBuilder: (context, index) {
+                                              final item = data[index];
+                                              return InkWell(
+                                                onTap: () => _onRowTap(item),
+                                                hoverColor:
+                                                    Colors.orange.shade50,
+                                                child: Container(
+                                                  height: rowHeight,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8.0,
+                                                        vertical: 12.0,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    border: Border(
+                                                      bottom: BorderSide(
+                                                        color: Colors
+                                                            .grey
+                                                            .shade200,
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  child: Center(
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            vertical: 6,
+                                                            horizontal: 12,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: _getStatusColor(
+                                                          item.status,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
+                                                      ),
+                                                      child: Text(
+                                                        item.status
+                                                            .toUpperCase(),
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 11,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    child: Align(
-                                      alignment: col == 8
-                                          ? Alignment.center
-                                          : Alignment.centerLeft,
-                                      child: cellContent,
-                                    ),
-                                  );
-                                }),
-                              ),
-                            );
-                          },
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 );
               },
@@ -375,11 +653,11 @@ class _PengajuanPageState extends State<PengajuanPage> {
     );
   }
 }
-
+ 
 // 🔹 CUSTOM WIDGETS (sesuaikan dengan komponen Anda)
 class AddEventButton extends StatelessWidget {
   const AddEventButton({super.key});
-
+ 
   @override
   Widget build(BuildContext context) {
     return TextButton.icon(
@@ -400,33 +678,54 @@ class AddEventButton extends StatelessWidget {
     );
   }
 }
-
+ 
 class PrioritySwitchButton extends StatelessWidget {
-  const PrioritySwitchButton({super.key});
-
+  final List<EventModel> data;
+ 
+  const PrioritySwitchButton({super.key, required this.data});
+ 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
+ 
     return BlocBuilder<PriorityBloc, PriorityState>(
       builder: (context, state) {
         return SizedBox(
           height: size.height * 0.075,
           child: TextButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: state.usePriority
-                  ? CustomColors.oranges
-                  : Colors.grey,
+              backgroundColor: state.usePriority ? Colors.orange : Colors.grey,
               iconColor: Colors.white,
               iconSize: 20.0,
             ),
             onPressed: state.isLoading
                 ? null
-                : () {
-                    context.read<PriorityBloc>().add(
-                      TogglePriorityEvent(!state.usePriority),
-                    );
+                : () async {
+                    if (!state.usePriority) {
+                      // 🟢 Kalau sedang OFF dan mau dinyalakan → buka dialog
+                      final hasil = await PriorityDialog.show(
+                        context,
+                        events: data,
+                      );
+ 
+                      if (hasil != null) {
+                        hasil.forEach((eventName, value) {
+                          print('Event: $eventName | Nilai: $value');
+                        });
+ 
+                        // Kirim event ke bloc setelah selesai dialog
+                        context.read<PriorityBloc>().add(
+                          TogglePriorityEvent(true),
+                        );
+                      }
+                    } else {
+                      // 🔴 Kalau sedang ON dan mau dimatikan → langsung toggle tanpa dialog
+                      context.read<PriorityBloc>().add(
+                        TogglePriorityEvent(false),
+                      );
+                    }
                   },
+ 
             label: Text(
               state.usePriority ? "Priority: ON" : "Priority: OFF",
               style: const TextStyle(
@@ -434,12 +733,11 @@ class PrioritySwitchButton extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            icon: state.usePriority
-                ? Icon(Icons.star, color: const Color.fromARGB(255, 3, 71, 127))
-                : Icon(Icons.star_border),
+            icon: Icon(state.usePriority ? Icons.star : Icons.star_border),
           ),
         );
       },
     );
   }
 }
+ 

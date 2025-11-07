@@ -1,4 +1,4 @@
-import 'package:bm_binus/core/constants.dart/custom_colors.dart';
+import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
 import 'package:bm_binus/presentation/cubit/ui_cubit.dart';
