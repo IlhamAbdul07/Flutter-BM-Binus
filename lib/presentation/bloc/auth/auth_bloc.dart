@@ -1,4 +1,5 @@
 import 'package:bm_binus/core/services/api_service.dart';
+import 'package:bm_binus/core/services/socket_service.dart';
 import 'package:bm_binus/core/services/storage_service.dart';
 import 'package:bm_binus/data/models/user_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -77,8 +78,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  void _onLogoutRequested(LogoutRequested event, Emitter<AuthState> emit) {
-    ApiService.authLogout();
+  void _onLogoutRequested(LogoutRequested event, Emitter<AuthState> emit) async {
+    await ApiService.authLogout();
+    await socketServiceManager.disconnectAll();
     emit(const AuthState(isAuthenticated: false, isSendForgot: false));
   }
 

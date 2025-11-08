@@ -1,7 +1,7 @@
 import 'dart:developer';
-
 import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/core/notifiers/session_notifier.dart';
+import 'package:bm_binus/core/services/socket_service.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_bloc.dart';
@@ -18,8 +18,32 @@ class MainLayout extends StatelessWidget {
   final Widget child;
   const MainLayout({super.key, required this.child});
 
+  Future<void> _initializeSocket(String userId, NotificationBloc bloc) async {
+    final socket = socketServiceManager.getOrCreate(
+      userId: userId,
+      onDataReceive: (data) async {
+        try {
+          if (data['is_new'] == true) {
+            bloc.add(LoadNotificationsEvent());
+          }
+        } catch (e) {
+          log("⚠️ Error saat handle socket data: $e");
+        }
+      },
+    );
+    await socket.connect();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+
+    if (authState.id != null) {
+      final notifBloc = context.read<NotificationBloc>();
+      _initializeSocket(authState.id.toString(), notifBloc);
+      log("🔌 Menghubungkan Socket untuk userId: ${authState.id}");
+    }
+
     return BlocProvider(
       create: (_) => SidebarBloc(),
       child: LayoutBuilder(

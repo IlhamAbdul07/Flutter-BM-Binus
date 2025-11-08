@@ -3,6 +3,7 @@ import 'package:bm_binus/data/models/notification_model.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_bloc.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_event.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_state.dart';
+import 'package:bm_binus/presentation/widgets/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -35,7 +36,19 @@ class NotificationDialog extends StatelessWidget {
 
             // List Notifikasi (pakai BlocBuilder)
             Expanded(
-              child: BlocBuilder<NotificationBloc, NotificationState>(
+              child: BlocConsumer<NotificationBloc, NotificationState>(
+                listener: (context, state) {
+                  if (state.requestId != null){
+                    CustomSnackBar.show(
+                      context,
+                      icon: Icons.check_circle,
+                      title: 'success set read!',
+                      message: 'Request ID: ${state.requestId}',
+                      color: Colors.green,
+                    );
+                    state.setRequestId(null);
+                  }
+                },
                 builder: (context, state) {
                   // Loading
                   if (state.isLoading) {
@@ -101,6 +114,14 @@ class NotificationDialog extends StatelessWidget {
                 'Notifikasi',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: 'Muat ulang notifikasi',
+                icon: Icon(Icons.refresh, color: Colors.blue.shade700),
+                onPressed: () {
+                  context.read<NotificationBloc>().add(LoadNotificationsEvent());
+                },
+              ),
             ],
           ),
           BlocBuilder<NotificationBloc, NotificationState>(
@@ -108,10 +129,7 @@ class NotificationDialog extends StatelessWidget {
               if (state.unreadCount > 0) {
                 return TextButton(
                   onPressed: () {
-                    // Trigger event: Mark all as read
-                    context.read<NotificationBloc>().add(
-                      MarkAllNotificationsAsReadEvent(),
-                    );
+                    context.read<NotificationBloc>().add(MarkAllNotificationsAsReadEvent());
                   },
                   child: Text(
                     'Tandai Semua Dibaca',
@@ -162,23 +180,8 @@ class NotificationDialog extends StatelessWidget {
           ),
         ],
       ),
-      trailing: IconButton(
-        icon: Icon(Icons.close, color: Colors.grey.shade400, size: 20),
-        onPressed: () {
-          // Trigger event: Delete notification
-          context.read<NotificationBloc>().add(
-            DeleteNotificationEvent(notif.id),
-          );
-        },
-      ),
       onTap: () {
-        // Trigger event: Mark as read
-        if (!notif.isRead) {
-          context.read<NotificationBloc>().add(
-            MarkNotificationAsReadEvent(notif.id),
-          );
-        }
-        // TODO: Navigate ke detail page
+        context.read<NotificationBloc>().add(MarkNotificationAsReadEvent(notif.id));
       },
       tileColor: notif.isRead ? Colors.white : Colors.blue.shade50,
     );
@@ -279,7 +282,18 @@ class NotificationDialog extends StatelessWidget {
     } else if (difference.inDays < 7) {
       return '${difference.inDays} hari yang lalu';
     } else {
-      return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
+      final List<String> monthNames = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+        'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+      ];
+
+      final day = timestamp.day.toString().padLeft(2, '0');
+      final month = monthNames[timestamp.month - 1];
+      final year = timestamp.year;
+      final hour = timestamp.hour.toString().padLeft(2, '0');
+      final minute = timestamp.minute.toString().padLeft(2, '0');
+
+      return '$day $month $year, $hour:$minute';
     }
   }
 

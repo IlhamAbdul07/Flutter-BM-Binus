@@ -5,6 +5,36 @@ import 'package:centrifuge/centrifuge.dart' as centrifuge;
 import 'package:flutter/widgets.dart';
 
 const String baseUrlSocket = "wss://yusnar.my.id/socket-bm-binus";
+SocketServiceManager socketServiceManager = SocketServiceManager();
+
+class SocketServiceManager {
+  static final SocketServiceManager _instance = SocketServiceManager._internal();
+  factory SocketServiceManager() => _instance;
+  SocketServiceManager._internal();
+
+  final Map<String, SocketService> _activeSockets = {};
+
+  SocketService getOrCreate({
+    required String userId,
+    required Function(dynamic) onDataReceive,
+  }) {
+    if (_activeSockets.containsKey(userId)) {
+      return _activeSockets[userId]!;
+    }
+
+    final socket = SocketService(userId: userId, onDataReceive: onDataReceive);
+    _activeSockets[userId] = socket;
+    return socket;
+  }
+
+  Future<void> disconnectAll() async {
+    debugPrint("❌ Socket disconnected...");
+    for (final socket in _activeSockets.values) {
+      await socket.disconnect();
+    }
+    _activeSockets.clear();
+  }
+}
 
 class SocketService {
   late centrifuge.Client _client;
@@ -17,7 +47,12 @@ class SocketService {
   Future<void> connect() async {
     final token = StorageService.getToken();
 
-    if (token == null || userId.isEmpty) return;
+    if (token == null || userId.isEmpty) {
+      debugPrint("❌ Token null atau userId kosong. Gagal konek.");
+      return;
+    }
+
+    debugPrint("🚀 Menghubungkan ke Centrifuge: userId=$userId");
 
     _client = centrifuge.createClient(
       '$baseUrlSocket/websocket',
@@ -25,10 +60,12 @@ class SocketService {
     );
 
     _client.connected.listen((event) {
+      debugPrint("✅ Socket connected. Subscribing channel...");
       _subscribeToChannel();
     });
 
     _client.disconnected.listen((event) {
+      debugPrint("⚠️ Socket disconnected (code: ${event.code}, reason: ${event.reason})");
       switch (event.code) {
         case 109:
           _handleTokenExpired(token);
@@ -41,6 +78,10 @@ class SocketService {
         default:
           _reconnect();
       }
+    });
+
+    _client.error.listen((event) {
+      debugPrint("💥 Socket error: ${event.error}");
     });
 
     await _client.connect();
@@ -94,7 +135,7 @@ class SocketService {
       await _client.disconnect();
       await connect();
     } else {
-      debugPrint('Failed to refresh token.');
+      debugPrint('❌ Failed to refresh token.');
     }
   }
 

@@ -9,6 +9,7 @@ class NotificationState extends Equatable {
   final bool sessionExp;
   final String? errorMessage; // Pesan error (kalau ada)
   final int unreadCount; // Jumlah notifikasi belum dibaca
+  final int? requestId;
 
   const NotificationState({
     this.notifications = const [],
@@ -16,6 +17,7 @@ class NotificationState extends Equatable {
     this.sessionExp = false,
     this.errorMessage,
     this.unreadCount = 0,
+    this.requestId,
   });
 
   // State awal (pas pertama kali)
@@ -26,6 +28,7 @@ class NotificationState extends Equatable {
       sessionExp: false,
       errorMessage: null,
       unreadCount: 0,
+      requestId: null,
     );
   }
 
@@ -54,6 +57,10 @@ class NotificationState extends Equatable {
     return copyWith(isLoading: false, sessionExp: true, errorMessage: message);
   }
 
+  NotificationState setRequestId(int? reqId) {
+    return copyWith(requestId: reqId);
+  }
+
   // Method untuk copy state dengan perubahan tertentu
   NotificationState copyWith({
     List<NotificationModel>? notifications,
@@ -61,6 +68,7 @@ class NotificationState extends Equatable {
     bool? sessionExp,
     String? errorMessage,
     int? unreadCount,
+    int? requestId,
   }) {
     return NotificationState(
       notifications: notifications ?? this.notifications,
@@ -68,6 +76,7 @@ class NotificationState extends Equatable {
       sessionExp: sessionExp ?? this.sessionExp,
       errorMessage: errorMessage,
       unreadCount: unreadCount ?? this.unreadCount,
+      requestId: requestId,
     );
   }
 
@@ -78,5 +87,6 @@ class NotificationState extends Equatable {
     sessionExp,
     errorMessage,
     unreadCount,
+    requestId,
   ];
 }

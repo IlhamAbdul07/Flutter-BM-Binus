@@ -276,12 +276,13 @@ class ApiService {
     bool? getDashboard,
     int? roleId,
     String? contentType = "application/json",
+    Map<String, String>? params,
   }) async {
     final token = StorageService.getToken();
 
     String endpoint;
     if (method == 'GET') {
-      endpoint = '/notification';
+      endpoint = '/notification${params != null ? GeneralService.buildQueryParams(params) : ""}';
       if (getDashboard != null && roleId != null){
         endpoint = '/dashboard/$roleId';
       }

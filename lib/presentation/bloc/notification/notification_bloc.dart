@@ -34,7 +34,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     on<LoadNotificationsEvent>((event, emit) async {
       emit(state.loading());
       try {
-        final response = await ApiService.handleNotifDashboard(method: "GET");
+        final response = await ApiService.handleNotifDashboard(method: "GET", params: {
+          "order": "created_at",
+          "order_by": "desc",
+        });
         if (response["success"] == true && response["data"] != null) {
           final data = response["data"]["data"];
 
@@ -63,68 +66,35 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       }
     });
 
-    // =====================================================
-    // HANDLER: Mark As Read (1 notifikasi)
-    // =====================================================
-    on<MarkNotificationAsReadEvent>((event, emit) {
-      final updatedNotifications = state.notifications.map((notif) {
-        if (notif.id == event.notificationId) {
-          return notif.copyWith(isRead: true);
+    on<MarkNotificationAsReadEvent>((event, emit) async {
+      try {
+        final response = await ApiService.handleNotifDashboard(method: "PATCH", notifId: int.parse(event.notificationId));
+        if (response["success"] == true && response["data"] != null) {
+          final data = response["data"];
+          add(LoadNotificationsEvent());
+          emit(state.setRequestId(data["request_id"]));
+        } else {
+          emit(state.error("Gagal mark notif as read"));
         }
-        return notif;
-      }).toList();
-
-      emit(state.success(updatedNotifications));
+      } catch (e) {
+        emit(state.error("Terjadi kesalahan: $e"));
+      }
     });
 
-    // =====================================================
-    // HANDLER: Mark All As Read
-    // =====================================================
-    on<MarkAllNotificationsAsReadEvent>((event, emit) {
-      final updatedNotifications =
-          state.notifications.map((notif) => notif.copyWith(isRead: true)).toList();
-
-      emit(state.success(updatedNotifications));
-    });
-
-    // =====================================================
-    // HANDLER: Delete Notification (hapus 1)
-    // =====================================================
-    on<DeleteNotificationEvent>((event, emit) {
-      final updatedNotifications = state.notifications
-          .where((notif) => notif.id != event.notificationId)
-          .toList();
-
-      emit(state.success(updatedNotifications));
-    });
-
-    // =====================================================
-    // HANDLER: Clear All (hapus semua)
-    // =====================================================
-    on<ClearAllNotificationsEvent>((event, emit) {
-      emit(state.success([]));
-    });
-
-    // =====================================================
-    // HANDLER: Add Notification (tambah notif baru)
-    // =====================================================
-    on<AddNotificationEvent>((event, emit) {
-      final newNotification = NotificationModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: event.title,
-        message: event.message,
-        timestamp: DateTime.now(),
-        isRead: false,
-        type: _getTypeFromString(event.type),
-      );
-
-      final updatedNotifications = [newNotification, ...state.notifications];
-
-      emit(state.success(updatedNotifications));
+    on<MarkAllNotificationsAsReadEvent>((event, emit) async {
+      try {
+        final response = await ApiService.handleNotifDashboard(method: "PUT");
+        if (response["success"] == true && response["data"] != null) {
+          add(LoadNotificationsEvent());
+        } else {
+          emit(state.error("Gagal mark all notif as read"));
+        }
+      } catch (e) {
+        emit(state.error("Terjadi kesalahan: $e"));
+      }
     });
   }
 
-  // Helper untuk deteksi tipe notifikasi berdasarkan judul
   NotificationType _detectType(String? title) {
     if (title == null) return NotificationType.info;
 
@@ -141,24 +111,6 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       return NotificationType.delete;
     } else {
       return NotificationType.info;
-    }
-  }
-
-  // Helper konversi string ke NotificationType
-  NotificationType _getTypeFromString(String type) {
-    switch (type.toLowerCase()) {
-      case 'event baru':
-        return NotificationType.event;
-      case 'event diperbarui':
-        return NotificationType.edit;
-      case 'event dihapus':
-        return NotificationType.delete;
-      case 'comment':
-        return NotificationType.comment;
-      case 'file':
-        return NotificationType.file;
-      default:
-        return NotificationType.info;
     }
   }
 }
