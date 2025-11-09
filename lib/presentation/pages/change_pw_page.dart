@@ -27,6 +27,7 @@ class ChangePwPage extends StatelessWidget {
   // 🖥️ DESKTOP LAYOUT
   // ======================================================
   Widget _buildDesktopLayout(BuildContext context, Size size) {
+    final oldPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
 
@@ -48,6 +49,15 @@ class ChangePwPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
+            // 🔒 Password Lama
+            _passwordRow(
+              context,
+              label: "Password Lama",
+              controller: oldPasswordController,
+            ),
+
+            const SizedBox(height: 16),
+
             // 🔒 Password Baru
             _passwordRow(
               context,
@@ -60,7 +70,7 @@ class ChangePwPage extends StatelessWidget {
             // 🔒 Konfirmasi Password
             _passwordRow(
               context,
-              label: "Konfirmasi Password",
+              label: "Konfirmasi Password Baru",
               controller: confirmPasswordController,
             ),
 
@@ -81,6 +91,7 @@ class ChangePwPage extends StatelessWidget {
                   ),
                   onPressed: () {
                     checkPasswordMatch(
+                      oldPasswordController.text,
                       newPasswordController.text,
                       confirmPasswordController.text,
                       context,
@@ -107,6 +118,7 @@ class ChangePwPage extends StatelessWidget {
   // 📱 MOBILE LAYOUT
   // ======================================================
   Widget _buildMobileLayout(BuildContext context, Size size) {
+    final oldPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
 
@@ -123,6 +135,14 @@ class ChangePwPage extends StatelessWidget {
 
           _passwordColumn(
             context,
+            label: "Password Lama",
+            controller: oldPasswordController,
+          ),
+
+          const SizedBox(height: 16),
+
+          _passwordColumn(
+            context,
             label: "Password Baru",
             controller: newPasswordController,
           ),
@@ -131,7 +151,7 @@ class ChangePwPage extends StatelessWidget {
 
           _passwordColumn(
             context,
-            label: "Konfirmasi Password",
+            label: "Konfirmasi Password Baru",
             controller: confirmPasswordController,
           ),
 
@@ -149,6 +169,7 @@ class ChangePwPage extends StatelessWidget {
               ),
               onPressed: () {
                 checkPasswordMatch(
+                  oldPasswordController.text,
                   newPasswordController.text,
                   confirmPasswordController.text,
                   context,
@@ -258,28 +279,48 @@ class ChangePwPage extends StatelessWidget {
 
 // 🧠 Dummy Validator (sementara)
 void checkPasswordMatch(
+  String oldPassword,
   String newPassword,
   String confirmPassword,
   BuildContext context,
 ) {
   // Check for null or empty passwords
-  if (newPassword.isEmpty || confirmPassword.isEmpty) {
+  if (oldPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
     CustomSnackBar.show(
       context,
       icon: Icons.error,
       title: 'Input Error',
-      message: 'Password tidak boleh kosong.',
+      message: 'Semua field wajib diisi.',
       color: Colors.red,
     );
     return;
   }
 
-  if (newPassword != confirmPassword) {
+  if (oldPassword.length < 8 || newPassword.length < 8 || confirmPassword.length < 8) {
+    CustomSnackBar.show(
+      context,
+      icon: Icons.error,
+      title: 'Input Error',
+      message: 'Semua field wajib minimal 8 karakter.',
+      color: Colors.red,
+    );
+    return;
+  }
+
+  if (oldPassword == newPassword) {
     CustomSnackBar.show(
       context,
       icon: Icons.error,
       title: 'Password Mismatch',
-      message: 'Password dan konfirmasi tidak sesuai.',
+      message: 'Password baru tidak boleh sama dengan password lama.',
+      color: Colors.red,
+    );
+  } else if (newPassword != confirmPassword) {
+    CustomSnackBar.show(
+      context,
+      icon: Icons.error,
+      title: 'Password Mismatch',
+      message: 'Password baru dan konfirmasi password tidak sesuai.',
       color: Colors.red,
     );
   } else {
@@ -294,6 +335,7 @@ void checkPasswordMatch(
       cancelText: "Batal",
       cancelColor: Colors.black,
       onConfirm: () {
+        // bloc user for change password 
         context.read<AuthBloc>().add(LogoutRequested());
       },
     );

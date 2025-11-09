@@ -294,6 +294,8 @@ class ApiService {
       throw Exception('Parameter tidak lengkap untuk operasi $method');
     }
 
+    if (token == null && endpoint.contains("/notification?")) return null;
+    
     final response = await apiRequest(
       method: method,
       endpoint: endpoint,

@@ -38,7 +38,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
           "order": "created_at",
           "order_by": "desc",
         });
-        if (response["success"] == true && response["data"] != null) {
+        if (response != null && response["success"] == true && response["data"] != null) {
           final data = response["data"]["data"];
 
           if (data == null) {
