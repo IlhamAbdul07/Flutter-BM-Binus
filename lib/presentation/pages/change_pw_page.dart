@@ -1,11 +1,18 @@
 import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
+import 'package:bm_binus/presentation/bloc/user/user_bloc.dart';
+import 'package:bm_binus/presentation/bloc/user/user_event.dart';
+import 'package:bm_binus/presentation/bloc/user/user_state.dart';
 import 'package:bm_binus/presentation/cubit/ui_cubit.dart';
 import 'package:bm_binus/presentation/widgets/custom_dialog.dart';
 import 'package:bm_binus/presentation/widgets/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+const labelOldPassword = "Password Lama";
+const labelNewPassword = "Password Baru";
+const labelConfirmPassword = "Konfirmasi Password Baru";
 
 class ChangePwPage extends StatelessWidget {
   const ChangePwPage({super.key});
@@ -14,13 +21,37 @@ class ChangePwPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    if (size.width > 800) {
-      // 🖥️ DESKTOP
-      return _buildDesktopLayout(context, size);
-    } else {
-      // 📱 MOBILE
-      return _buildMobileLayout(context, size);
-    }
+    return BlocListener<UserBloc, UserState>(
+      listener: (context, state) async {
+        if (state.isChangePw) {
+          CustomSnackBar.show(
+            context,
+            icon: Icons.check_circle,
+            title: 'Success Change Password',
+            message: 'Password berhasil diubah, anda akan diarahkan ke halaman login.',
+            color: Colors.green,
+          );
+          state.copyWith(isChangePw: false);
+          await Future.delayed(const Duration(seconds: 1));
+          context.read<UiCubit>().toggleOldPasswordReset();
+          context.read<UiCubit>().toggleNewPasswordReset();
+          context.read<UiCubit>().toggleConfirmPasswordReset();
+          context.read<AuthBloc>().add(LogoutRequested());
+        } else if (state.errorChangePw != null) {
+          CustomSnackBar.show(
+            context,
+            icon: Icons.error,
+            title: 'Failed Change Password',
+            message: state.errorChangePw!,
+            color: Colors.red,
+          );
+          state.copyWith(errorChangePw: null);
+        }
+      },
+      child: size.width > 800
+          ? _buildDesktopLayout(context, size)
+          : _buildMobileLayout(context, size),
+    );
   }
 
   // ======================================================
@@ -49,28 +80,25 @@ class ChangePwPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // 🔒 Password Lama
             _passwordRow(
               context,
-              label: "Password Lama",
+              label: labelOldPassword,
               controller: oldPasswordController,
             ),
 
             const SizedBox(height: 16),
 
-            // 🔒 Password Baru
             _passwordRow(
               context,
-              label: "Password Baru",
+              label: labelNewPassword,
               controller: newPasswordController,
             ),
 
             const SizedBox(height: 16),
 
-            // 🔒 Konfirmasi Password
             _passwordRow(
               context,
-              label: "Konfirmasi Password Baru",
+              label: labelConfirmPassword,
               controller: confirmPasswordController,
             ),
 
@@ -135,7 +163,7 @@ class ChangePwPage extends StatelessWidget {
 
           _passwordColumn(
             context,
-            label: "Password Lama",
+            label: labelOldPassword,
             controller: oldPasswordController,
           ),
 
@@ -143,7 +171,7 @@ class ChangePwPage extends StatelessWidget {
 
           _passwordColumn(
             context,
-            label: "Password Baru",
+            label: labelNewPassword,
             controller: newPasswordController,
           ),
 
@@ -151,7 +179,7 @@ class ChangePwPage extends StatelessWidget {
 
           _passwordColumn(
             context,
-            label: "Konfirmasi Password Baru",
+            label: labelConfirmPassword,
             controller: confirmPasswordController,
           ),
 
@@ -200,6 +228,24 @@ class ChangePwPage extends StatelessWidget {
   }) {
     return BlocBuilder<UiCubit, UiState>(
       builder: (context, state) {
+        bool obscurePw = true;
+        VoidCallback funcVisibility =() {};
+        switch (label) {
+          case labelOldPassword:
+            obscurePw = state.isOldPasswordObscured;
+            funcVisibility = () => context.read<UiCubit>().toggleOldPasswordVisibility();
+            break;
+          case labelNewPassword:
+            obscurePw = state.isNewPasswordObscured;
+            funcVisibility = () => context.read<UiCubit>().toggleNewPasswordVisibility();
+            break;
+          case labelConfirmPassword:
+            obscurePw = state.isConfirmPasswordObscured;
+            funcVisibility = () => context.read<UiCubit>().toggleConfirmPasswordVisibility();
+            break;
+          default:
+            obscurePw = state.isPasswordObscured;
+        }
         return Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -220,15 +266,14 @@ class ChangePwPage extends StatelessWidget {
                   isDense: true,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      state.isPasswordObscured
+                      obscurePw
                           ? Icons.visibility_off
                           : Icons.visibility,
                     ),
-                    onPressed: () =>
-                        context.read<UiCubit>().togglePasswordVisibility(),
+                    onPressed: funcVisibility,
                   ),
                 ),
-                obscureText: state.isPasswordObscured,
+                obscureText: obscurePw,
               ),
             ),
           ],
@@ -247,6 +292,24 @@ class ChangePwPage extends StatelessWidget {
   }) {
     return BlocBuilder<UiCubit, UiState>(
       builder: (context, state) {
+        bool obscurePw;
+        VoidCallback funcVisibility =() {};
+        switch (label) {
+          case labelOldPassword:
+            obscurePw = state.isOldPasswordObscured;
+            funcVisibility = () => context.read<UiCubit>().toggleOldPasswordVisibility();
+            break;
+          case labelNewPassword:
+            obscurePw = state.isNewPasswordObscured;
+            funcVisibility = () => context.read<UiCubit>().toggleNewPasswordVisibility();
+            break;
+          case labelConfirmPassword:
+            obscurePw = state.isConfirmPasswordObscured;
+            funcVisibility = () => context.read<UiCubit>().toggleConfirmPasswordVisibility();
+            break;
+          default:
+            obscurePw = state.isPasswordObscured;
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -260,15 +323,14 @@ class ChangePwPage extends StatelessWidget {
                 isDense: true,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    state.isPasswordObscured
+                    obscurePw
                         ? Icons.visibility_off
                         : Icons.visibility,
                   ),
-                  onPressed: () =>
-                      context.read<UiCubit>().togglePasswordVisibility(),
+                  onPressed: funcVisibility,
                 ),
               ),
-              obscureText: state.isPasswordObscured,
+              obscureText: obscurePw,
             ),
           ],
         );
@@ -335,8 +397,9 @@ void checkPasswordMatch(
       cancelText: "Batal",
       cancelColor: Colors.black,
       onConfirm: () {
-        // bloc user for change password 
-        context.read<AuthBloc>().add(LogoutRequested());
+        final authState = context.read<AuthBloc>().state;
+        final userId = authState.id;
+        context.read<UserBloc>().add(ChangePasswordRequested(userId!, oldPassword, newPassword));
       },
     );
   }

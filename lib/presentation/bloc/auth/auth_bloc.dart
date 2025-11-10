@@ -9,6 +9,9 @@ import 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc() : super(const AuthState(isAuthenticated: false, isSendForgot: false)) {
     on<LoginRequested>(_onLoginRequested);
+    on<ClearAuthError>((event, emit) {
+      emit(state.copyWith(error: null));
+    });
     on<LogoutRequested>(_onLogoutRequested);
     on<CheckAuthSession>(_onCheckAuthSession);
     on<ForgotPasswordRequested>(_onForgotPasswordRequest);
@@ -95,23 +98,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           final user = User.fromJson(responseData);
           emit(state.copyWith(isAuthenticated: true, isSendForgot: false, id: user.id, name: user.name, email: user.email, roleId: user.roleId, roleName: user.roleName));
         } else {
-          if (response != null && response['data'] != null) {
-            StorageService.clearToken();
-            emit(
-              state.copyWith(
-                isSendForgot: false,
-                isAuthenticated: false,
-              ),
-            );
-          } else {
-            StorageService.clearToken();
-            emit(
-              state.copyWith(
-                isSendForgot: false,
-                isAuthenticated: false,
-              ),
-            );
-          }
+          StorageService.clearToken();
+          emit(
+            state.copyWith(
+              isSendForgot: false,
+              isAuthenticated: false,
+            ),
+          );
         }
       } catch (e) {
         StorageService.clearToken();

@@ -86,6 +86,8 @@ class _LoginPageState extends State<LoginPage> {
               message: state.error!,
               color: Colors.red,
             );
+
+            context.read<AuthBloc>().add(const ClearAuthError());
           }
         },
         builder: (context, state) {

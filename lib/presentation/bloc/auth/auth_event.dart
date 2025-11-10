@@ -17,6 +17,10 @@ class LoginRequested extends AuthEvent {
   List<Object> get props => [email, password];
 }
 
+class ClearAuthError extends AuthEvent {
+  const ClearAuthError();
+}
+
 class LogoutRequested extends AuthEvent {}
 
 class CheckAuthSession extends AuthEvent {}

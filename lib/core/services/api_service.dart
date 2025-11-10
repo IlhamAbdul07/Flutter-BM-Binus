@@ -203,12 +203,11 @@ class ApiService {
         contentType: 'application/json',
       );
 
-      if (response != null && response['code'] == 200) {
-        StorageService.clearToken();
-      } else {
-        debugPrint("Logout API gagal: ${response?['code']}");
-        StorageService.clearToken();
+      if (response == null || response['code'] != 200) {
+        log("Logout API gagal: ${response?['code']}");
       }
+      
+      StorageService.clearToken();
     } catch (e) {
       debugPrint("Error when logout: $e");
     }

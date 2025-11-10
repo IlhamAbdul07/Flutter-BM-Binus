@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bm_binus/data/models/event_model.dart';
 import 'package:bm_binus/data/models/event_type_model.dart';
 import 'package:bm_binus/data/models/users_model.dart';
+import 'package:bm_binus/presentation/bloc/user/user_bloc.dart';
 import 'package:bm_binus/presentation/layout/main_layout.dart';
 import 'package:bm_binus/presentation/pages/add_event_page.dart';
 import 'package:bm_binus/presentation/pages/ahp_page.dart';
@@ -55,7 +56,10 @@ GoRouter createRouter(AuthBloc authBloc) {
           ),
           GoRoute(
             path: '/ubahpassword',
-            builder: (context, state) => const ChangePwPage(),
+            builder: (context, state) => BlocProvider(
+              create: (_) => UserBloc(),
+              child: const ChangePwPage(),
+            ),
           ),
           GoRoute(
             path: '/pengajuan',
