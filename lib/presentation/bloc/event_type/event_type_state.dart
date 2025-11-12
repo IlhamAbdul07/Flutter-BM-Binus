@@ -1,76 +1,72 @@
-import 'package:bm_binus/data/models/users_model.dart';
+import 'package:bm_binus/data/models/event_type_model.dart';
 import 'package:equatable/equatable.dart';
 
-class UsersState extends Equatable {
-  final List<Users> users;
+class EventTypeState extends Equatable {
+  final List<EventType> eventType;
   final bool isLoading;
   final String? errorFetch; 
-  final bool isChangePw;
-  final String? errorChangePw;
+  final String? infoFetch;
   final bool isSuccessTrx;
   final String? errorTrx;
   final String? typeTrx;
 
-  const UsersState({
-    this.users = const [],
+  const EventTypeState({
+    this.eventType = const [],
     this.isLoading = false,
     this.errorFetch,
-    required this.isChangePw,
-    this.errorChangePw,
+    this.infoFetch,
     required this.isSuccessTrx,
     this.errorTrx,
     this.typeTrx,
   });
 
-  factory UsersState.initial() {
-    return const UsersState(
-      users: [],
+  factory EventTypeState.initial() {
+    return const EventTypeState(
+      eventType: [],
       isLoading: false,
       errorFetch: null,
-      isChangePw: false,
-      errorChangePw: null,
+      infoFetch: null,
       isSuccessTrx: false,
       errorTrx: null,
       typeTrx: null,
     );
   }
 
-  UsersState loading() {
+  EventTypeState loading() {
     return copyWith(isLoading: true, errorFetch: null);
   }
 
-  UsersState success(List<Users> users) {
+  EventTypeState success(List<EventType> eventType, String info) {
     return copyWith(
-      users: users,
+      eventType: eventType,
       isLoading: false,
       errorFetch: null,
+      infoFetch: info,
     );
   }
 
-  UsersState error(String message) {
+  EventTypeState error(String message) {
     return copyWith(isLoading: false, errorFetch: message);
   }
 
-  UsersState setLoading(bool loading) {
+  EventTypeState setLoading(bool loading) {
     return copyWith(isLoading: loading);
   }
 
-  UsersState copyWith({
-    List<Users>? users,
+  EventTypeState copyWith({
+    List<EventType>? eventType,
     bool? isLoading,
     String? errorFetch,
-    bool? isChangePw,
-    String? errorChangePw,
+    String? infoFetch,
     bool? isSuccessTrx,
     String? errorTrx,
     String? typeTrx,
   }) {
-    return UsersState(
-      users: users ?? this.users,
+    return EventTypeState(
+      eventType: eventType ?? this.eventType,
       isLoading: isLoading ?? this.isLoading,
       errorFetch: errorFetch,
-      isChangePw: isChangePw ?? this.isChangePw,
-      errorChangePw: errorChangePw,
+      infoFetch: infoFetch,
       isSuccessTrx: isSuccessTrx ?? this.isSuccessTrx,
       errorTrx: errorTrx,
       typeTrx: typeTrx,
@@ -78,5 +74,5 @@ class UsersState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [users, isLoading, errorFetch, isChangePw, errorChangePw, isSuccessTrx, errorTrx, typeTrx];
+  List<Object?> get props => [eventType, isLoading, errorFetch, infoFetch, isSuccessTrx, errorTrx, typeTrx];
 }

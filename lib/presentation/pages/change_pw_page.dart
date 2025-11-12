@@ -21,7 +21,7 @@ class ChangePwPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    return BlocListener<UserBloc, UserState>(
+    return BlocListener<UserBloc, UsersState>(
       listener: (context, state) async {
         if (state.isChangePw) {
           CustomSnackBar.show(
@@ -399,7 +399,7 @@ void checkPasswordMatch(
       onConfirm: () {
         final authState = context.read<AuthBloc>().state;
         final userId = authState.id;
-        context.read<UserBloc>().add(ChangePasswordRequested(userId!, oldPassword, newPassword));
+        context.read<UserBloc>().add(ChangePasswordUserRequested(userId!, oldPassword, newPassword));
       },
     );
   }

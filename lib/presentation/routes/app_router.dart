@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bm_binus/data/models/event_model.dart';
 import 'package:bm_binus/data/models/event_type_model.dart';
 import 'package:bm_binus/data/models/users_model.dart';
+import 'package:bm_binus/presentation/bloc/event_type/event_type_bloc.dart';
 import 'package:bm_binus/presentation/bloc/user/user_bloc.dart';
 import 'package:bm_binus/presentation/layout/main_layout.dart';
 import 'package:bm_binus/presentation/pages/add_event_page.dart';
@@ -12,7 +13,7 @@ import 'package:bm_binus/presentation/pages/change_pw_page.dart';
 import 'package:bm_binus/presentation/pages/dashboard_page.dart';
 import 'package:bm_binus/presentation/pages/event_detail_page.dart';
 import 'package:bm_binus/presentation/pages/event_type_form_page.dart';
-import 'package:bm_binus/presentation/pages/event_type_page.dart';
+import 'package:bm_binus/presentation/pages/event_type_data_page.dart';
 import 'package:bm_binus/presentation/pages/forgot_password_page.dart';
 import 'package:bm_binus/presentation/pages/login_page.dart';
 import 'package:bm_binus/presentation/pages/pengajuan_page.dart';
@@ -81,9 +82,12 @@ GoRouter createRouter(AuthBloc authBloc) {
             builder: (context, state) {
               final extra = state.extra as Map<String, dynamic>;
               final mode = extra['mode'] as FormMode;
-              final eventType = extra['eventType'] as EventTypeModel?;
+              final eventType = extra['eventType'] as EventType?;
 
-              return EventTypeFormPage(mode: mode, eventType: eventType);
+              return BlocProvider(
+                create: (_) => EventTypeBloc(),
+                child: EventTypeFormPage(mode: mode, eventType: eventType),
+              );
             },
           ),
           GoRoute(
@@ -91,9 +95,12 @@ GoRouter createRouter(AuthBloc authBloc) {
             builder: (context, state) {
               final extra = state.extra as Map<String, dynamic>;
               final mode = extra['mode'] as UserFormMode;
-              final user = extra['user'] as UserModel?;
+              final user = extra['user'] as Users?;
 
-              return UserFormPage(mode: mode, user: user);
+              return BlocProvider(
+                create: (_) => UserBloc(),
+                child: UserFormPage(mode: mode, user: user),
+              );
             },
           ),
           GoRoute(

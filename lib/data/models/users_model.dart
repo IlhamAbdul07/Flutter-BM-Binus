@@ -1,28 +1,29 @@
-class UserModel {
-  final String id;
-  final String nama;
+class Users {
+  final int id;
+  final String name;
   final String email;
-  final UserRole role;
-  final bool isAktif;
+  final int roleId;
+  final String roleName;
+  final DateTime createdAt;
 
-  UserModel({
+  Users({
     required this.id,
-    required this.nama,
+    required this.name,
     required this.email,
-    required this.role,
-    required this.isAktif,
+    required this.roleId,
+    required this.roleName,
+    required this.createdAt,
   });
 
   // Convert dari JSON
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
-      id: json['id'] as String,
-      nama: json['nama'] as String,
-      email: json['email'] as String,
-      role: UserRole.values.firstWhere(
-        (e) => e.toString().split('.').last == json['role'],
-      ),
-      isAktif: json['isAktif'] as bool,
+  factory Users.fromJson(Map<String, dynamic> json) {
+    return Users(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      roleId: json['role']?['id'] ?? 0,
+      roleName: json['role']?['name'] ?? '',
+      createdAt: DateTime.parse(json['created_at']),
     );
   }
 
@@ -30,45 +31,11 @@ class UserModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'nama': nama,
+      'name': name,
       'email': email,
-      'role': role.toString().split('.').last,
-      'isAktif': isAktif,
+      'role_id': roleId,
+      'role_name': roleName,
+      'created_at': createdAt.toIso8601String(),
     };
   }
-
-  // Copy with method untuk update data
-  UserModel copyWith({
-    String? id,
-    String? nama,
-    String? email,
-    UserRole? role,
-    bool? isAktif,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      nama: nama ?? this.nama,
-      email: email ?? this.email,
-      role: role ?? this.role,
-      isAktif: isAktif ?? this.isAktif,
-    );
-  }
-
-  // Getter untuk status dalam bentuk string
-  String get statusText => isAktif ? 'Aktif' : 'Tidak Aktif';
-
-  // Getter untuk role dalam bentuk string yang lebih readable
-  String get roleText {
-    switch (role) {
-      case UserRole.staff:
-        return 'Staff';
-      case UserRole.bm:
-        return 'BM';
-      case UserRole.iss:
-        return 'ISS';
-    }
-  }
 }
-
-// Enum untuk role user
-enum UserRole { staff, bm, iss }

@@ -13,17 +13,45 @@ class SocketServiceManager {
   SocketServiceManager._internal();
 
   final Map<String, SocketService> _activeSockets = {};
+  final Map<String, bool> _connectCalled = {};
 
   SocketService getOrCreate({
     required String userId,
     required Function(dynamic) onDataReceive,
   }) {
     if (_activeSockets.containsKey(userId)) {
-      return _activeSockets[userId]!;
+      final existing = _activeSockets[userId]!;
+      existing.onDataReceive = onDataReceive;
+      return existing;
     }
 
     final socket = SocketService(userId: userId, onDataReceive: onDataReceive);
     _activeSockets[userId] = socket;
+    _connectCalled[userId] = false;
+    return socket;
+  }
+
+  Future<SocketService> getOrCreateAndConnect({
+    required String userId,
+    required Function(dynamic) onDataReceive,
+  }) async {
+    final socket = getOrCreate(userId: userId, onDataReceive: onDataReceive);
+
+    if (_connectCalled[userId] == true) {
+      debugPrint("⚠️ Connect sudah dipanggil sebelumnya untuk userId=$userId, melewatkan connect ulang.");
+      return socket;
+    }
+
+    try {
+      _connectCalled[userId] = true;
+      await socket.connect();
+      debugPrint("✅ Connect berhasil untuk userId=$userId (manager)");
+    } catch (e) {
+      _connectCalled[userId] = false;
+      debugPrint("❌ Gagal connect untuk userId=$userId: $e");
+      rethrow;
+    }
+
     return socket;
   }
 
@@ -66,6 +94,7 @@ class SocketService {
 
     _client.disconnected.listen((event) {
       debugPrint("⚠️ Socket disconnected (code: ${event.code}, reason: ${event.reason})");
+      socketServiceManager._connectCalled[userId] = false;
       switch (event.code) {
         case 109:
           _handleTokenExpired(token);

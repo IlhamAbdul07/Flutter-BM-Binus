@@ -340,7 +340,7 @@ class SidebarMenu extends StatelessWidget {
                         {
                           'label': 'Event Type',
                           'route': '/eventtype',
-                          'icon': Icons.list,
+                          'icon': Icons.event,
                         },
                       ],
                     ),

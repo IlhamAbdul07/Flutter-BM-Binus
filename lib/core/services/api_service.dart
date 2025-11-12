@@ -5,6 +5,8 @@ import 'package:bm_binus/core/services/general_service.dart';
 import 'package:bm_binus/core/services/storage_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
 
 const String baseUrl = "https://yusnar.my.id/go-bm-binus";
 
@@ -343,10 +345,10 @@ class ApiService {
   }
 
 
-  // ============================== MASTER DATA (TASK TYPE) ============================== //
-  static Future<dynamic> handleTaskType({
+  // ============================== MASTER DATA (EVENT TYPE) ============================== //
+  static Future<dynamic> handleEventType({
     required String method,
-    int? taskTypeId,
+    int? eventTypeId,
     Map<String, dynamic>? data,
     String? contentType = "application/json",
     Map<String, String>? params,
@@ -355,13 +357,13 @@ class ApiService {
 
     String endpoint;
     if (method == 'GET') {
-      endpoint = '/task/type${taskTypeId != null ? "/$taskTypeId" : ""}${params != null ? GeneralService.buildQueryParams(params) : ""}';
+      endpoint = '/request/event-type${eventTypeId != null ? "/$eventTypeId" : ""}${params != null ? GeneralService.buildQueryParams(params) : ""}';
     } else if (method == 'POST') {
-      endpoint = '/task/type';
-    } else if (method == 'PUT' && taskTypeId != null) {
-      endpoint = '/task/type/$taskTypeId';
-    } else if (method == 'DELETE' && taskTypeId != null) {
-      endpoint = '/task/type/$taskTypeId';
+      endpoint = '/request/event-type';
+    } else if (method == 'PUT' && eventTypeId != null) {
+      endpoint = '/request/event-type/$eventTypeId';
+    } else if (method == 'DELETE' && eventTypeId != null) {
+      endpoint = '/request/event-type/$eventTypeId';
     } else {
       throw Exception('Parameter tidak lengkap untuk operasi $method');
     }
@@ -514,6 +516,33 @@ class ApiService {
       // return null;
       rethrow;
     }
+  }
+
+  static Future<void> downloadFileFromResponse(http.Response response) async {
+    final contentDisposition = response.headers['content-disposition'];
+    String fileName = 'file.pdf';
+    if (contentDisposition != null) {
+      final regex = RegExp(r'filename="?([^"]+)"?');
+      final match = regex.firstMatch(contentDisposition);
+      if (match != null) fileName = match.group(1)!;
+    }
+
+    final bytes = response.bodyBytes;
+    final jsBytes = bytes.toJS;
+
+    final blobParts = [jsBytes].toJS;
+    final blob = web.Blob(blobParts, web.BlobPropertyBag(type: 'application/pdf'));
+
+    final url = web.URL.createObjectURL(blob);
+
+    final anchor = web.HTMLAnchorElement()
+      ..href = url
+      ..download = fileName
+      ..target = '_blank';
+
+    anchor.click();
+
+    web.URL.revokeObjectURL(url);
   }
 
   static Future<http.Response> exportUsers() async {

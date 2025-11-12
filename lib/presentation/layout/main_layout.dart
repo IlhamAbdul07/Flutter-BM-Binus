@@ -19,7 +19,7 @@ class MainLayout extends StatelessWidget {
   const MainLayout({super.key, required this.child});
 
   Future<void> _initializeSocket(String userId, NotificationBloc bloc) async {
-    final socket = socketServiceManager.getOrCreate(
+    await socketServiceManager.getOrCreateAndConnect(
       userId: userId,
       onDataReceive: (data) async {
         try {
@@ -31,7 +31,6 @@ class MainLayout extends StatelessWidget {
         }
       },
     );
-    await socket.connect();
   }
 
   @override
@@ -69,7 +68,7 @@ class MainLayout extends StatelessWidget {
 }
 
 PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
-  context.read<NotificationBloc>().add(LoadNotificationsEvent());
+  // context.read<NotificationBloc>().add(LoadNotificationsEvent());
   return AppBar(
     title: Row(
       spacing: 10,
@@ -167,7 +166,7 @@ PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
 }
 
 PreferredSizeWidget buildAppBarMobile(BuildContext context) {
-  context.read<NotificationBloc>().add(LoadNotificationsEvent());
+  // context.read<NotificationBloc>().add(LoadNotificationsEvent());
   return AppBar(
     backgroundColor: CustomColors.primary,
     title: Row(

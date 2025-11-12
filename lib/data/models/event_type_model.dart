@@ -1,39 +1,29 @@
-class EventTypeModel {
-  final String id;
-  final String jenisEvent;
+class EventType {
+  final int id;
+  final String name;
   final int priority;
 
-  EventTypeModel({
+  EventType({
     required this.id,
-    required this.jenisEvent,
+    required this.name,
     required this.priority,
   });
 
   // Convert dari JSON
-  factory EventTypeModel.fromJson(Map<String, dynamic> json) {
-    return EventTypeModel(
-      id: json['id'] as String,
-      jenisEvent: json['jenisEvent'] as String,
-      priority: json['priority'] as int,
+  factory EventType.fromJson(Map<String, dynamic> json) {
+    return EventType(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      priority: json['priority'] ?? 0,
     );
   }
 
   // Convert ke JSON
   Map<String, dynamic> toJson() {
-    return {'id': id, 'jenisEvent': jenisEvent, 'priority': priority};
-  }
-
-  // Copy with method untuk update data
-  EventTypeModel copyWith({String? id, String? jenisEvent, int? priority}) {
-    return EventTypeModel(
-      id: id ?? this.id,
-      jenisEvent: jenisEvent ?? this.jenisEvent,
-      priority: priority ?? this.priority,
-    );
-  }
-
-  // Compare untuk sorting berdasarkan priority (descending)
-  int compareTo(EventTypeModel other) {
-    return other.priority.compareTo(priority); // Descending order
+    return {
+      'id': id,
+      'name': name,
+      'priority': priority,
+    };
   }
 }
