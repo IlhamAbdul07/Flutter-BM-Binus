@@ -1,45 +1,72 @@
 import 'package:equatable/equatable.dart';
-import 'package:bm_binus/data/models/event_model.dart';
 
 abstract class EventEvent extends Equatable {
   const EventEvent();
 
   @override
-  List<Object?> get props => [];
+  List<Object> get props => [];
 }
 
-// Event untuk load semua data
-class LoadEvents extends EventEvent {}
+class LoadsEventRequested extends EventEvent {
+  final int? userId;
+  final String? ahp;
+  final String? eventComplexity;
 
-// Event untuk select/view detail event
-class SelectEvent extends EventEvent {
-  final EventModel event;
-
-  const SelectEvent(this.event);
+  const LoadsEventRequested(this.userId, this.ahp, this.eventComplexity);
 
   @override
-  List<Object?> get props => [event];
+  List<Object> get props => [userId!, ahp!, eventComplexity!];
 }
 
-// Event untuk update event
-class UpdateEvent extends EventEvent {
-  final EventModel event;
+class DownloadEventRequested extends EventEvent {
+  final int? userId;
+  final bool? forAdmin;
 
-  const UpdateEvent(this.event);
+  const DownloadEventRequested(this.userId, this.forAdmin);
 
   @override
-  List<Object?> get props => [event];
+  List<Object> get props => [userId!, forAdmin!];
 }
 
-// Event untuk delete event
-class DeleteEvent extends EventEvent {
-  final int eventNo;
+class LoadDetailEventRequested extends EventEvent {
+  final int requestId;
 
-  const DeleteEvent(this.eventNo);
+  const LoadDetailEventRequested(this.requestId);
 
   @override
-  List<Object?> get props => [eventNo];
+  List<Object> get props => [requestId];
 }
 
-// Event untuk clear selection
-class ClearSelection extends EventEvent {}
+// class CreateEventRequested extends EventEvent {
+//   final String name;
+//   final String email;
+//   final int roleId;
+
+//   const CreateEventRequested(this.name, this.email, this.roleId);
+
+//   @override
+//   List<Object> get props => [name, email, roleId];
+// }
+
+// class UpdateEventRequested extends EventEvent {
+//   final int userId;
+//   final String? name;
+//   final String? email;
+//   final int? roleId;
+
+//   const UpdateEventRequested(this.userId, this.name, this.email, this.roleId);
+
+//   @override
+//   List<Object> get props => [userId, name!, email!, roleId!];
+// }
+
+// class DeleteEventRequested extends EventEvent {
+//   final int userId;
+
+//   const DeleteEventRequested(this.userId);
+
+//   @override
+//   List<Object> get props => [userId];
+// }
+
+// class DownloadEventsEvent extends EventEvent {}

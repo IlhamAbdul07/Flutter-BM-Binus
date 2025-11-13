@@ -1,8 +1,9 @@
 import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/core/constants/ui_helpers.dart';
 import 'package:bm_binus/data/dummy/komentar_data.dart';
+import 'package:bm_binus/data/models/event_detail_model.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
-import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
+// import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_state.dart';
 import 'package:bm_binus/presentation/widgets/custom_dialog.dart';
 import 'package:bm_binus/presentation/widgets/custom_input_dialog.dart';
@@ -11,11 +12,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:bm_binus/data/models/event_model.dart';
+// import 'package:bm_binus/data/models/event_model.dart';
 import 'package:bm_binus/data/models/komentar_model.dart';
 
 class EventDetailPage extends StatefulWidget {
-  final EventModel event;
+  final EventDetailModel event;
 
   const EventDetailPage({super.key, required this.event});
 
@@ -56,14 +57,14 @@ class _EventDetailPageState extends State<EventDetailPage> {
   }
 
   void _initializeControllers() {
-    _staffController = TextEditingController(text: widget.event.staff);
-    _eventController = TextEditingController(text: widget.event.event);
-    _lokasiController = TextEditingController(text: widget.event.lokasi);
-    _eventTipeController = TextEditingController(text: widget.event.eventTipe);
-    _statusController = TextEditingController(text: widget.event.status);
+    _staffController = TextEditingController(text: widget.event.userName);
+    _eventController = TextEditingController(text: widget.event.eventName);
+    _lokasiController = TextEditingController(text: widget.event.eventLocation);
+    _eventTipeController = TextEditingController(text: widget.event.eventTypeName);
+    _statusController = TextEditingController(text: widget.event.statusName);
 
-    _tglMulai = widget.event.tglMulai;
-    _tglSelesai = widget.event.tglSelesai;
+    _tglMulai = widget.event.eventDateStart;
+    _tglSelesai = widget.event.eventDateEnd;
 
     _tglMulaiController = TextEditingController(
       text: DateFormat('dd MMM yyyy').format(_tglMulai),
@@ -74,7 +75,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
   }
 
   void _loadKomentar() {
-    _komentarList = KomentarData.getKomentarForEvent(widget.event.no);
+    _komentarList = KomentarData.getKomentarForEvent(widget.event.id);
   }
 
   @override
@@ -115,17 +116,17 @@ class _EventDetailPageState extends State<EventDetailPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isUpdating = true);
 
-      final updatedEvent = widget.event.copyWith(
-        staff: _staffController.text,
-        event: _eventController.text,
-        lokasi: _lokasiController.text,
-        tglMulai: _tglMulai,
-        tglSelesai: _tglSelesai,
-        eventTipe: _eventTipeController.text,
-        status: _statusController.text,
-      );
+      // final updatedEvent = widget.event.copyWith(
+      //   staff: _staffController.text,
+      //   event: _eventController.text,
+      //   lokasi: _lokasiController.text,
+      //   tglMulai: _tglMulai,
+      //   tglSelesai: _tglSelesai,
+      //   eventTipe: _eventTipeController.text,
+      //   status: _statusController.text,
+      // );
 
-      context.read<EventBloc>().add(UpdateEvent(updatedEvent));
+      // context.read<EventBloc>().add(UpdateEvent(updatedEvent));
     }
   }
 
@@ -143,7 +144,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<EventBloc>().add(DeleteEvent(widget.event.no));
+              // context.read<EventBloc>().add(DeleteEvent(widget.event.id));
               context.pop();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -198,27 +199,27 @@ class _EventDetailPageState extends State<EventDetailPage> {
       ),
       body: BlocListener<EventBloc, EventState>(
         listener: (context, state) {
-          if (state is EventOperationSuccess) {
-            setState(() => _isUpdating = false);
+          // if (state is EventOperationSuccess) {
+          //   setState(() => _isUpdating = false);
 
-            CustomSnackBar.show(
-              context,
-              icon: Icons.error,
-              title: 'SUKSES',
-              message: state.message,
-              color: Colors.green,
-            );
-          } else if (state is EventError) {
-            setState(() => _isUpdating = false);
+          //   CustomSnackBar.show(
+          //     context,
+          //     icon: Icons.error,
+          //     title: 'SUKSES',
+          //     message: state.message,
+          //     color: Colors.green,
+          //   );
+          // } else if (state is EventError) {
+          //   setState(() => _isUpdating = false);
 
-            CustomSnackBar.show(
-              context,
-              icon: Icons.error,
-              title: 'Error',
-              message: state.message,
-              color: Colors.red,
-            );
-          }
+          //   CustomSnackBar.show(
+          //     context,
+          //     icon: Icons.error,
+          //     title: 'Error',
+          //     message: state.message,
+          //     color: Colors.red,
+          //   );
+          // }
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -240,7 +241,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                             const Icon(Icons.info_outline, color: Colors.blue),
                             const SizedBox(width: 8),
                             Text(
-                              'Event #${widget.event.no}',
+                              'Event #${widget.event.id}',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -250,7 +251,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Dibuat: ${DateFormat('dd MMM yyyy').format(widget.event.tglDibuat)}',
+                          'Dibuat: ${DateFormat('dd MMM yyyy').format(widget.event.createdAt)}',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,

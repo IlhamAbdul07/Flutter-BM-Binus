@@ -1,60 +1,91 @@
-import 'package:equatable/equatable.dart';
+import 'package:bm_binus/data/models/event_detail_model.dart';
 import 'package:bm_binus/data/models/event_model.dart';
+import 'package:equatable/equatable.dart';
 
-abstract class EventState extends Equatable {
-  const EventState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-// Initial state
-class EventInitial extends EventState {}
-
-// Loading state
-class EventLoading extends EventState {}
-
-// Loaded state dengan list events
-class EventLoaded extends EventState {
+class EventState extends Equatable {
   final List<EventModel> events;
-  final EventModel? selectedEvent;
+  final EventDetailModel? singleEvent;
+  final bool isLoading;
+  final String? errorFetch; 
+  final bool isSuccessTrx;
+  final String? errorTrx;
+  final String? typeTrx;
+  final bool isLoadingTrx;
 
-  const EventLoaded({required this.events, this.selectedEvent});
+  const EventState({
+    this.events = const [],
+    this.singleEvent,
+    this.isLoading = false,
+    this.errorFetch,
+    required this.isSuccessTrx,
+    this.errorTrx,
+    this.typeTrx,
+    this.isLoadingTrx = false
+  });
 
-  @override
-  List<Object?> get props => [events, selectedEvent];
-
-  EventLoaded copyWith({
-    List<EventModel>? events,
-    EventModel? selectedEvent,
-    bool clearSelection = false,
-  }) {
-    return EventLoaded(
-      events: events ?? this.events,
-      selectedEvent: clearSelection
-          ? null
-          : (selectedEvent ?? this.selectedEvent),
+  factory EventState.initial() {
+    return const EventState(
+      events: [],
+      singleEvent: null,
+      isLoading: false,
+      errorFetch: null,
+      isSuccessTrx: false,
+      errorTrx: null,
+      typeTrx: null,
+      isLoadingTrx: false
     );
   }
-}
 
-// Success state untuk operasi update/delete
-class EventOperationSuccess extends EventState {
-  final String message;
-  final List<EventModel> events;
+  EventState loading() {
+    return copyWith(isLoading: true, errorFetch: null);
+  }
 
-  const EventOperationSuccess({required this.message, required this.events});
+  EventState success(List<EventModel> events) {
+    return copyWith(
+      events: events,
+      isLoading: false,
+      errorFetch: null,
+    );
+  }
+
+  EventState error(String message) {
+    return copyWith(isLoading: false, errorFetch: message);
+  }
+
+  EventState setLoadingTrx(bool loading) {
+    return copyWith(isLoadingTrx: loading);
+  }
+
+  EventState successDetail(EventDetailModel? event) {
+    return copyWith(
+      singleEvent: event,
+      isLoading: false,
+      errorFetch: null,
+    );
+  }
+
+  EventState copyWith({
+    List<EventModel>? events,
+    EventDetailModel? singleEvent,
+    bool? isLoading,
+    String? errorFetch,
+    bool? isSuccessTrx,
+    String? errorTrx,
+    String? typeTrx,
+    bool? isLoadingTrx,
+  }) {
+    return EventState(
+      events: events ?? this.events,
+      singleEvent: singleEvent,
+      isLoading: isLoading ?? this.isLoading,
+      errorFetch: errorFetch,
+      isSuccessTrx: isSuccessTrx ?? this.isSuccessTrx,
+      errorTrx: errorTrx,
+      typeTrx: typeTrx,
+      isLoadingTrx: isLoadingTrx ?? this.isLoadingTrx,
+    );
+  }
 
   @override
-  List<Object?> get props => [message, events];
-}
-
-// Error state
-class EventError extends EventState {
-  final String message;
-
-  const EventError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [events, singleEvent, isLoading, errorFetch, isSuccessTrx, errorTrx, typeTrx, isLoadingTrx];
 }

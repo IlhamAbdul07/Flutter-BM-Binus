@@ -380,30 +380,25 @@ class ApiService {
   }
 
 
-  // ============================== MASTER DATA (WORK) ============================== //
-  static Future<dynamic> handleWork({
+  // ============================== REQUEST ============================== //
+  static Future<dynamic> handleRequest({
     required String method,
-    bool? dashboardAdmin,
-    int? workId,
+    int? requestId,
     Map<String, dynamic>? data,
     String? contentType = "application/json",
     Map<String, String>? params,
-    List<http.MultipartFile> listFile = const [],
   }) async {
     final token = StorageService.getToken();
 
     String endpoint;
     if (method == 'GET') {
-      endpoint = '/work${workId != null ? "/$workId" : ""}${params != null ? GeneralService.buildQueryParams(params) : ""}';
-      if (dashboardAdmin != null && dashboardAdmin){
-        endpoint = '/work/dashboard-admin${params != null ? GeneralService.buildQueryParams(params) : ""}';
-      }
+      endpoint = '/request${requestId != null ? "/$requestId" : ""}${params != null ? GeneralService.buildQueryParams(params) : ""}';
     } else if (method == 'POST') {
-      endpoint = '/work';
-    } else if (method == 'PUT' && workId != null) {
-      endpoint = '/work/$workId';
-    } else if (method == 'DELETE' && workId != null) {
-      endpoint = '/work/$workId';
+      endpoint = '/request';
+    } else if (method == 'PUT' && requestId != null) {
+      endpoint = '/request/$requestId';
+    } else if (method == 'DELETE' && requestId != null) {
+      endpoint = '/request/$requestId';
     } else {
       throw Exception('Parameter tidak lengkap untuk operasi $method');
     }
@@ -413,7 +408,6 @@ class ApiService {
       endpoint: endpoint,
       body: data,
       token: token,
-      listFile: listFile,
       contentType: contentType!,
     );
 
@@ -421,7 +415,7 @@ class ApiService {
   }
 
 
-  // ============================== MASTER DATA (COMMENT) ============================== //
+  // ============================== COMMENT ============================== //
   static Future<dynamic> handleComment({
     required String method,
     int? commentId,
@@ -433,13 +427,13 @@ class ApiService {
 
     String endpoint;
     if (method == 'GET') {
-      endpoint = '/work/comment${commentId != null ? "/$commentId" : ""}${params != null ? GeneralService.buildQueryParams(params) : ""}';
+      endpoint = '/request/comment${commentId != null ? "/$commentId" : ""}${params != null ? GeneralService.buildQueryParams(params) : ""}';
     } else if (method == 'POST') {
-      endpoint = '/work/comment';
+      endpoint = '/request/comment';
     } else if (method == 'PUT' && commentId != null) {
-      endpoint = '/work/comment/$commentId';
+      endpoint = '/request/comment/$commentId';
     } else if (method == 'DELETE' && commentId != null) {
-      endpoint = '/work/comment/$commentId';
+      endpoint = '/request/comment/$commentId';
     } else {
       throw Exception('Parameter tidak lengkap untuk operasi $method');
     }
@@ -449,6 +443,43 @@ class ApiService {
       endpoint: endpoint,
       body: data,
       token: token,
+      contentType: contentType!,
+    );
+
+    return response;
+  }
+
+
+  // ============================== FILE ============================== //
+  static Future<dynamic> handleFile({
+    required String method,
+    int? fileId,
+    Map<String, dynamic>? data,
+    String? contentType = "application/json",
+    Map<String, String>? params,
+    List<http.MultipartFile> listFile = const [],
+  }) async {
+    final token = StorageService.getToken();
+
+    String endpoint;
+    if (method == 'GET') {
+      endpoint = '/request/file${fileId != null ? "/$fileId" : ""}${params != null ? GeneralService.buildQueryParams(params) : ""}';
+    } else if (method == 'POST') {
+      endpoint = '/request/file';
+    } else if (method == 'PUT' && fileId != null) {
+      endpoint = '/request/file/$fileId';
+    } else if (method == 'DELETE' && fileId != null) {
+      endpoint = '/request/file/$fileId';
+    } else {
+      throw Exception('Parameter tidak lengkap untuk operasi $method');
+    }
+
+    final response = await apiRequest(
+      method: method,
+      endpoint: endpoint,
+      body: data,
+      token: token,
+      listFile: listFile,
       contentType: contentType!,
     );
 
@@ -556,22 +587,23 @@ class ApiService {
     return response;
   }
 
-  static String formatDateRange(DateTime? date) {
-    if (date == null) return '';
-    final formatted = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-    return "${formatted}_$formatted";
-  }
-
-  static Future<http.Response> exportWorks(DateTime? date) async {
+  static Future<http.Response> exportRequests(Map<String, String> param) async {
     final token = StorageService.getToken();
-    final createdDate = formatDateRange(date);
     final response = await apiRequestExportData(
       method: 'GET',
-      endpoint: '/work/export',
-      params: {
-        'format':'pdf',
-        'created_at':createdDate
-      },
+      endpoint: '/request/export',
+      params: param,
+      token: token,
+    );
+    return response;
+  }
+
+  static Future<http.Response> exportRequestById(int requestId) async {
+    final token = StorageService.getToken();
+    final response = await apiRequestExportData(
+      method: 'GET',
+      endpoint: '/request/export/$requestId',
+      params: {'format':'pdf'},
       token: token,
     );
     return response;

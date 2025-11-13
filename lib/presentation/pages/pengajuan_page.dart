@@ -23,59 +23,65 @@ class PengajuanPage extends StatefulWidget {
 }
  
 class _PengajuanPageState extends State<PengajuanPage> {
+
+  void _loadEventsByRole(String roleName, int? userId) {
+    final eventBloc = context.read<EventBloc>();
+    if (roleName == 'Staf Binus') {
+      eventBloc.add(LoadsEventRequested(userId, null, null));
+    } else if (roleName == 'Building Management') {
+      eventBloc.add(LoadsEventRequested(null, null, null));
+    } else if (roleName == 'Admin ISS') {
+      eventBloc.add(LoadsEventRequested(null, null, null));
+    }
+  }
+
+  String _fmt(DateTime date) => DateFormat('dd MMM yyyy hh:mm a').format(date);
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Pengajuan':
+        return Colors.orange;
+      case 'Validasi':
+        return Colors.blue;
+      case 'Proses':
+        return Colors.purple;
+      case 'Finalisasi':
+        return Colors.teal;
+      default:
+        return Colors.green;
+    }
+  }
+
+  void _onRowTap(EventModel event) {
+    context.read<EventBloc>().add(LoadDetailEventRequested(event.id));
+    context.push('/event-detail', extra: event);
+  }
+
   @override
   void initState() {
     super.initState();
-    // Load events saat page dibuka
-    context.read<EventBloc>().add(LoadEvents());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = context.read<AuthBloc>().state;
+      _loadEventsByRole(authState.roleName!, authState.id);
+    });
   }
  
-  String _fmt(DateTime date) => DateFormat('dd MMM yyyy').format(date);
- 
-  // 🎨 Fungsi untuk warna status
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'diajukan':
-        return Colors.orange;
-      case 'validasi':
-        return Colors.blue;
-      case 'disetujui':
-        return Colors.green;
-      case 'ditolak':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
- 
-  // 🎯 Fungsi untuk handle klik row
-  void _onRowTap(EventModel event) {
-    // Set selected event di BLoC
-    context.read<EventBloc>().add(SelectEvent(event));
- 
-    // Navigate ke detail page dengan data
-    context.push('/event-detail', extra: event);
-  }
  
   @override
   Widget build(BuildContext context) {
     const rowHeight = 56.0;
- 
-    // ✅ MODIFIKASI 1: Tetap pakai TableColumn
     final columns = <TableColumn>[
-      TableColumn(width: 56.0), // No
-      TableColumn(width: 160.0), // Nama Staf
-      TableColumn(width: 220.0), // Nama Event
-      TableColumn(width: 160.0), // Lokasi Event
-      TableColumn(width: 140.0), // Tgl Mulai
-      TableColumn(width: 140.0), // Tgl Selesai
-      TableColumn(width: 140.0), // Event Tipe
-      TableColumn(width: 140.0), // Tgl Dibuat
-      TableColumn(width: 120.0), // Status (akan di-freeze)
+      TableColumn(width: 60.0),
+      TableColumn(width: 170.0),
+      TableColumn(width: 200.0),
+      TableColumn(width: 200.0),
+      TableColumn(width: 170.0),
+      TableColumn(width: 170.0),
+      TableColumn(width: 200.0),
+      TableColumn(width: 170.0),
+      TableColumn(width: 120.0),
     ];
- 
-    // Hitung total width untuk scrollable columns
- 
+  
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -86,28 +92,52 @@ class _PengajuanPageState extends State<PengajuanPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  "Pengajuan Event",
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                Row(
+                  children: [
+                    const Text(
+                      "Pengajuan Event",
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      tooltip: 'Refresh Data',
+                      icon: Icon(Icons.refresh, color: Colors.blue.shade700),
+                      onPressed: () {
+                        final authState = context.read<AuthBloc>().state;
+                        _loadEventsByRole(authState.roleName!, authState.id);
+                      },
+                    ),
+                  ],
                 ),
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, authState) {
                     switch (authState.roleName) {
                       case 'Staf Binus':
-                        return const AddEventButton();
+                        return Row(
+                          children: [
+                            DownloadButton(userId: authState.id,),
+                            const SizedBox(width: 10,),
+                            const AddEventButton(),
+                          ],
+                        );
+                        
                       case 'Building Management':
                         final eventState = context.watch<EventBloc>().state;
                         List<EventModel> data = [];
- 
-                        if (eventState is EventLoaded) {
+                        if (eventState.isLoading) {
                           data = eventState.events;
-                        } else if (eventState is EventOperationSuccess) {
+                        } else if (!eventState.isLoading) {
                           data = eventState.events;
                         }
- 
-                        return PrioritySwitchButton(data: data);
+                        return Row(
+                          children: [
+                            DownloadButton(),
+                            const SizedBox(width: 10,),
+                            PrioritySwitchButton(data: data)
+                          ],
+                        );
                       case 'Admin ISS':
-                        return const SizedBox.shrink();
+                        return DownloadButton(forAdmin: true,);
                       default:
                         return const SizedBox.shrink();
                     }
@@ -121,32 +151,30 @@ class _PengajuanPageState extends State<PengajuanPage> {
           Expanded(
             child: BlocConsumer<EventBloc, EventState>(
               listener: (context, state) {
-                if (state is EventOperationSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                } else if (state is EventError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Colors.red,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
+                // if (state is EventOperationSuccess) {
+                //   ScaffoldMessenger.of(context).showSnackBar(
+                //     SnackBar(
+                //       content: Text(state.message),
+                //       backgroundColor: Colors.green,
+                //       duration: const Duration(seconds: 2),
+                //     ),
+                //   );
+                // } else if (state is EventError) {
+                //   ScaffoldMessenger.of(context).showSnackBar(
+                //     SnackBar(
+                //       content: Text(state.message),
+                //       backgroundColor: Colors.red,
+                //       duration: const Duration(seconds: 2),
+                //     ),
+                //   );
+                // }
               },
               builder: (context, state) {
-                // Loading State (tidak ada perubahan)
-                if (state is EventLoading) {
+                if (state.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
  
-                // Error State (tidak ada perubahan)
-                if (state is EventError) {
+                if (state.errorFetch != null) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -158,31 +186,37 @@ class _PengajuanPageState extends State<PengajuanPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          state.message,
+                          state.errorFetch!,
                           style: const TextStyle(fontSize: 16),
                         ),
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
                           onPressed: () {
-                            context.read<EventBloc>().add(LoadEvents());
+                            final authState = context.read<AuthBloc>().state;
+                            _loadEventsByRole(authState.roleName!, authState.id);
                           },
                           icon: const Icon(Icons.refresh),
-                          label: const Text('Coba Lagi'),
+                          label: const Text('Refresh Data'),
                         ),
                       ],
                     ),
                   );
                 }
  
-                // Get data dari state (tidak ada perubahan)
                 List<EventModel> data = [];
-                if (state is EventLoaded) {
+                if (state.isLoading) {
                   data = state.events;
-                } else if (state is EventOperationSuccess) {
+                } else if (!state.isLoading) {
                   data = state.events;
                 }
+                debugPrint(data.toString());
+
+                // filter for admin
+                final authState = context.read<AuthBloc>().state;
+                if (authState.roleName == 'Admin ISS') {
+                  data = data.where((e) => e.statusId == 3 || e.statusId == 4 || e.statusId == 5).toList();
+                }
  
-                // Empty State (tidak ada perubahan)
                 if (data.isEmpty) {
                   return Center(
                     child: Column(
@@ -206,7 +240,6 @@ class _PengajuanPageState extends State<PengajuanPage> {
                   );
                 }
  
-                // ✅ MODIFIKASI 2: TABLE dengan Frozen Column dan Scrollbar
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Column(
@@ -287,10 +320,10 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                         'Nama Staf',
                                                         'Nama Event',
                                                         'Lokasi Event',
-                                                        'Tgl Mulai',
-                                                        'Tgl Selesai',
-                                                        'Event Tipe',
-                                                        'Tgl Dibuat',
+                                                        'Waktu Mulai',
+                                                        'Waktu Selesai',
+                                                        'Jenis Event',
+                                                        'Tanggal Pengajuan',
                                                       ].asMap().entries.map((
                                                         entry,
                                                       ) {
@@ -341,7 +374,7 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                             bottom: BorderSide(
                                                               color: Colors
                                                                   .grey
-                                                                  .shade200,
+                                                                  .shade300,
                                                               width: 1,
                                                             ),
                                                           ),
@@ -360,7 +393,7 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                                         12.0,
                                                                   ),
                                                               child: Text(
-                                                                '${item.no}',
+                                                                '${index + 1}',
                                                                 style:
                                                                     const TextStyle(
                                                                       fontSize:
@@ -380,7 +413,9 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                                         12.0,
                                                                   ),
                                                               child: Text(
-                                                                item.staff,
+                                                                item.userName,
+                                                                softWrap: true,
+                                                                overflow: TextOverflow.visible,
                                                                 style:
                                                                     const TextStyle(
                                                                       fontSize:
@@ -400,7 +435,9 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                                         12.0,
                                                                   ),
                                                               child: Text(
-                                                                item.event,
+                                                                item.eventName,
+                                                                softWrap: true,
+                                                                overflow: TextOverflow.visible,
                                                                 style: const TextStyle(
                                                                   fontSize: 13,
                                                                   fontWeight:
@@ -421,7 +458,9 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                                         12.0,
                                                                   ),
                                                               child: Text(
-                                                                item.lokasi,
+                                                                item.eventLocation,
+                                                                softWrap: true,
+                                                                overflow: TextOverflow.visible,
                                                                 style:
                                                                     const TextStyle(
                                                                       fontSize:
@@ -442,8 +481,10 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                                   ),
                                                               child: Text(
                                                                 _fmt(
-                                                                  item.tglMulai,
+                                                                  item.eventDateStart,
                                                                 ),
+                                                                softWrap: true,
+                                                                overflow: TextOverflow.visible,
                                                                 style:
                                                                     const TextStyle(
                                                                       fontSize:
@@ -464,8 +505,10 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                                   ),
                                                               child: Text(
                                                                 _fmt(
-                                                                  item.tglSelesai,
+                                                                  item.eventDateEnd,
                                                                 ),
+                                                                softWrap: true,
+                                                                overflow: TextOverflow.visible,
                                                                 style:
                                                                     const TextStyle(
                                                                       fontSize:
@@ -485,7 +528,9 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                                         12.0,
                                                                   ),
                                                               child: Text(
-                                                                item.eventTipe,
+                                                                item.eventTypeName,
+                                                                softWrap: true,
+                                                                overflow: TextOverflow.visible,
                                                                 style:
                                                                     const TextStyle(
                                                                       fontSize:
@@ -506,8 +551,10 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                                   ),
                                                               child: Text(
                                                                 _fmt(
-                                                                  item.tglDibuat,
+                                                                  item.createdAt,
                                                                 ),
+                                                                softWrap: true,
+                                                                overflow: TextOverflow.visible,
                                                                 style:
                                                                     const TextStyle(
                                                                       fontSize:
@@ -609,7 +656,7 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                           ),
                                                       decoration: BoxDecoration(
                                                         color: _getStatusColor(
-                                                          item.status,
+                                                          item.statusName,
                                                         ),
                                                         borderRadius:
                                                             BorderRadius.circular(
@@ -617,7 +664,7 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                             ),
                                                       ),
                                                       child: Text(
-                                                        item.status
+                                                        item.statusName
                                                             .toUpperCase(),
                                                         style: const TextStyle(
                                                           color: Colors.white,
@@ -653,28 +700,68 @@ class _PengajuanPageState extends State<PengajuanPage> {
     );
   }
 }
+
+class DownloadButton extends StatelessWidget {
+  final int? userId;
+  final bool? forAdmin;
+  const DownloadButton({super.key, this.userId, this.forAdmin});
  
-// 🔹 CUSTOM WIDGETS (sesuaikan dengan komponen Anda)
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<EventBloc, EventState>(
+      builder: (context, eventState) {
+        final isDownloading = eventState.isLoadingTrx;
+        return SizedBox(
+          child: ElevatedButton.icon(
+            onPressed: () {
+              context.read<EventBloc>().add(DownloadEventRequested(userId, forAdmin));
+            },
+            icon: isDownloading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white,),
+                  )
+                : const Icon(Icons.download,color: Colors.white,),
+            label: Text(
+              "Download",
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent[700],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+ 
 class AddEventButton extends StatelessWidget {
   const AddEventButton({super.key});
  
   @override
   Widget build(BuildContext context) {
-    return TextButton.icon(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: CustomColors.oranges,
-        iconColor: Colors.white,
-        iconSize: 20.0,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    return SizedBox(
+      child: TextButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: CustomColors.oranges,
+          iconColor: Colors.white,
+          iconSize: 20.0,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        onPressed: () {
+          context.go('/addevent');
+        },
+        label: const Text(
+          "Tambah Event",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        icon: const Icon(Icons.add),
       ),
-      onPressed: () {
-        context.go('/addevent');
-      },
-      label: const Text(
-        "Tambah Event",
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      ),
-      icon: const Icon(Icons.add),
     );
   }
 }
@@ -686,54 +773,33 @@ class PrioritySwitchButton extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
- 
     return BlocBuilder<PriorityBloc, PriorityState>(
-      builder: (context, state) {
+      builder: (context, priorityState) {
         return SizedBox(
-          height: size.height * 0.075,
           child: TextButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: state.usePriority ? Colors.orange : Colors.grey,
-              iconColor: Colors.white,
-              iconSize: 20.0,
+              backgroundColor: priorityState.usePriority ? Colors.orange : Colors.grey,
             ),
-            onPressed: state.isLoading
+            onPressed: priorityState.isLoading
                 ? null
                 : () async {
-                    if (!state.usePriority) {
-                      // 🟢 Kalau sedang OFF dan mau dinyalakan → buka dialog
-                      final hasil = await PriorityDialog.show(
-                        context,
-                        events: data,
-                      );
- 
+                    if (!priorityState.usePriority) {
+                      final hasil = await PriorityDialog.show(context, events: data);
                       if (hasil != null) {
-                        hasil.forEach((eventName, value) {
-                          print('Event: $eventName | Nilai: $value');
-                        });
- 
-                        // Kirim event ke bloc setelah selesai dialog
-                        context.read<PriorityBloc>().add(
-                          TogglePriorityEvent(true),
-                        );
+                        context.read<PriorityBloc>().add(TogglePriorityEvent(true));
                       }
                     } else {
-                      // 🔴 Kalau sedang ON dan mau dimatikan → langsung toggle tanpa dialog
-                      context.read<PriorityBloc>().add(
-                        TogglePriorityEvent(false),
-                      );
+                      context.read<PriorityBloc>().add(TogglePriorityEvent(false));
                     }
                   },
- 
             label: Text(
-              state.usePriority ? "Priority: ON" : "Priority: OFF",
+              priorityState.usePriority ? "Priority: ON" : "Priority: OFF",
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            icon: Icon(state.usePriority ? Icons.star : Icons.star_border),
+            icon: Icon(priorityState.usePriority ? Icons.star : Icons.star_border, color: Colors.white,),
           ),
         );
       },

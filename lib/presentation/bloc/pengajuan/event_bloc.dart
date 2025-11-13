@@ -1,117 +1,123 @@
-import 'package:bm_binus/data/dummy/event_data.dart';
+// import 'package:bm_binus/data/dummy/event_data.dart';
+import 'package:bm_binus/core/services/api_service.dart';
+import 'package:bm_binus/data/models/event_detail_model.dart';
+import 'package:bm_binus/data/models/event_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'event_event.dart';
 import 'event_state.dart';
 
 class EventBloc extends Bloc<EventEvent, EventState> {
-  EventBloc() : super(EventInitial()) {
-    on<LoadEvents>(_onLoadEvents);
-    on<SelectEvent>(_onSelectEvent);
-    on<UpdateEvent>(_onUpdateEvent);
-    on<DeleteEvent>(_onDeleteEvent);
-    on<ClearSelection>(_onClearSelection);
-  }
-
-  // Load semua events
-  Future<void> _onLoadEvents(LoadEvents event, Emitter<EventState> emit) async {
-    emit(EventLoading());
-    try {
-      // Simulasi delay untuk loading
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final events = EventData.getEvents();
-      emit(EventLoaded(events: events));
-    } catch (e) {
-      emit(EventError('Gagal memuat data: ${e.toString()}'));
-    }
-  }
-
-  // Select event untuk detail
-  Future<void> _onSelectEvent(
-    SelectEvent event,
-    Emitter<EventState> emit,
-  ) async {
-    if (state is EventLoaded) {
-      final currentState = state as EventLoaded;
-      emit(currentState.copyWith(selectedEvent: event.event));
-    }
-  }
-
-  // Update event - HANYA SNACKBAR, data tidak berubah
-  Future<void> _onUpdateEvent(
-    UpdateEvent event,
-    Emitter<EventState> emit,
-  ) async {
-    if (state is EventLoaded) {
-      final currentState = state as EventLoaded;
-
+  EventBloc() : super(EventState.initial()) {
+    on<LoadsEventRequested>((event, emit) async {
+      emit(state.loading());
       try {
-        // Simulasi API call
-        await Future.delayed(const Duration(milliseconds: 500));
+        Map<String, String> data = {};
+        data["no_paging"] = "yes";
+        if (event.userId != null){
+          data["user_id"] = event.userId.toString();
+        }
+        if (event.ahp != null){
+          data["use_ahp"] = "yes";
+        }
+        if (event.eventComplexity != null){
+          data["event_complexity"] = event.eventComplexity!;
+        }
+        final response = await ApiService.handleRequest(method: "GET", params: data);
+        if (response != null && response["success"] == true && response["data"] != null) {
+          final data = response["data"]["data"];
 
-        // Emit success untuk trigger snackbar
-        // Data TETAP sama karena dummy
-        emit(
-          EventOperationSuccess(
-            message: 'Event berhasil diupdate!',
-            events: currentState.events, // 👈 Data TIDAK berubah
-          ),
-        );
+          if (data == null) {
+            emit(state.success([]));
+            return;
+          }
 
-        // Kembali ke loaded state dengan data yang SAMA
-        await Future.delayed(const Duration(milliseconds: 100));
-        emit(
-          EventLoaded(
-            events: currentState.events, // 👈 Data tetap dari dummy
-            selectedEvent: event.event,
-          ),
-        );
+          final List<EventModel> events = (data as List)
+              .map((item) => EventModel(
+                    id: item['id'] ?? 0,
+                    eventName: item['event_name'] ?? "",
+                    eventLocation: item['event_location'] ?? "",
+                    eventDateStart: DateTime.parse(item['event_date_start']),
+                    eventDateEnd: DateTime.parse(item['event_date_end']),
+                    eventTypeId: item['event_type']?['id'] ?? 0,
+                    eventTypeName: item['event_type']?['name'] ?? '',
+                    statusId: item['status']?['id'] ?? 0,
+                    statusName: item['status']?['name'] ?? '',
+                    userId: item['user']?['id'] ?? 0,
+                    userName: item['user']?['name'] ?? '',
+                    createdAt: DateTime.parse(item['created_at']),
+                    ahpScore: item['ahp_score']?['percent'] ?? '',
+                  ))
+              .toList();
+
+          emit(state.success(events));
+        } else {
+          emit(state.error("Gagal memuat data events"));
+        }
       } catch (e) {
-        emit(EventError('Gagal mengupdate event: ${e.toString()}'));
+        emit(state.error("Terjadi kesalahan: $e"));
       }
-    }
-  }
+    });
 
-  // Delete event - HANYA SNACKBAR, data tidak berubah
-  Future<void> _onDeleteEvent(
-    DeleteEvent event,
-    Emitter<EventState> emit,
-  ) async {
-    if (state is EventLoaded) {
-      final currentState = state as EventLoaded;
-
+    on<DownloadEventRequested>((event, emit) async {
+      emit(state.setLoadingTrx(true));
       try {
-        // Simulasi API call
-        await Future.delayed(const Duration(milliseconds: 500));
-
-        // Emit success untuk trigger snackbar
-        // Data TETAP sama karena dummy
-        emit(
-          EventOperationSuccess(
-            message: 'Event berhasil dihapus!',
-            events: currentState.events, // 👈 Data TIDAK berubah
-          ),
-        );
-
-        // Kembali ke loaded state dengan data yang SAMA
-        await Future.delayed(const Duration(milliseconds: 100));
-        emit(
-          EventLoaded(events: currentState.events),
-        ); // 👈 Data tetap dari dummy
+        Map<String, String> params = {};
+        params["format"] = 'pdf';
+        if (event.userId != null){
+          params["user_id"] = event.userId.toString();
+        }
+        if (event.forAdmin != null){
+          params["for_admin"] = true.toString();
+        }
+        final response = await ApiService.exportRequests(params);
+        if (response.statusCode == 200) {
+          await ApiService.downloadFileFromResponse(response);
+        } else {
+          emit(state.error("Gagal download data requests"));
+        }
       } catch (e) {
-        emit(EventError('Gagal menghapus event: ${e.toString()}'));
+        emit(state.error("Terjadi kesalahan: $e"));
       }
-    }
-  }
+      emit(state.setLoadingTrx(false));
+    });
 
-  // Clear selection
-  Future<void> _onClearSelection(
-    ClearSelection event,
-    Emitter<EventState> emit,
-  ) async {
-    if (state is EventLoaded) {
-      final currentState = state as EventLoaded;
-      emit(currentState.copyWith(clearSelection: true));
-    }
+    on<LoadDetailEventRequested>((event, emit) async {
+      emit(state.loading());
+      try {
+        final response = await ApiService.handleRequest(method: "GET", requestId: event.requestId);
+        if (response != null && response["success"] == true && response["data"] != null) {
+          final data = response["data"]["data"];
+
+          if (data == null) {
+            emit(state.successDetail(null));
+            return;
+          }
+
+          final EventDetailModel event = data.map((item) => EventDetailModel(
+            id: item['id'] ?? 0,
+            eventName: item['event_name'] ?? "",
+            eventLocation: item['event_location'] ?? "",
+            eventDateStart: DateTime.parse(item['event_date_start']),
+            eventDateEnd: DateTime.parse(item['event_date_end']),
+            description: item['description'] ?? "",
+            eventTypeId: item['event_type']?['id'] ?? 0,
+            eventTypeName: item['event_type']?['name'] ?? '',
+            statusId: item['status']?['id'] ?? 0,
+            statusName: item['status']?['name'] ?? '',
+            userId: item['user']?['id'] ?? 0,
+            userName: item['user']?['name'] ?? '',
+            countParticipant: item['count_participant'] ?? 0,
+            createdAt: DateTime.parse(item['created_at']),
+            updatedAt: DateTime.parse(item['updated_at']),
+          ));
+
+          emit(state.successDetail(event));
+        } else {
+          emit(state.error("Gagal memuat data single event"));
+        }
+      } catch (e) {
+        emit(state.error("Terjadi kesalahan: $e"));
+      }
+    });
   }
 }

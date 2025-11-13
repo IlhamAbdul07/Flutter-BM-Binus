@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:bm_binus/data/models/event_model.dart';
-import 'package:bm_binus/data/dummy/event_data.dart';
 
 class PriorityDialog extends StatefulWidget {
   final List<EventModel>? events;
@@ -31,10 +30,10 @@ class _PriorityDialogState extends State<PriorityDialog> {
     // Ambil data dari parameter, fallback ke dummy kalau kosong
     _events = (widget.events != null && widget.events!.isNotEmpty)
         ? widget.events!
-        : EventData.getEvents();
+        : [];
 
     for (var event in _events) {
-      _sliderValues[event.no] = 1; // default value
+      _sliderValues[event.id] = 1; // default value
     }
   }
 
@@ -69,14 +68,14 @@ class _PriorityDialogState extends State<PriorityDialog> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: _events.map((event) {
-                      final value = _sliderValues[event.no] ?? 0;
+                      final value = _sliderValues[event.id] ?? 0;
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              event.event,
+                              event.eventName,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -93,7 +92,7 @@ class _PriorityDialogState extends State<PriorityDialog> {
                                     label: value.round().toString(),
                                     onChanged: (newValue) {
                                       setState(() {
-                                        _sliderValues[event.no] = newValue;
+                                        _sliderValues[event.id] = newValue;
                                       });
                                     },
                                   ),
@@ -127,8 +126,8 @@ class _PriorityDialogState extends State<PriorityDialog> {
                   onPressed: () {
                     final Map<String, int> hasil = {};
                     for (var event in _events) {
-                      final value = _sliderValues[event.no]?.round() ?? 0;
-                      hasil[event.event] = value;
+                      final value = _sliderValues[event.id]?.round() ?? 0;
+                      hasil[event.eventName] = value;
                     }
                     Navigator.of(context).pop(hasil);
                   },

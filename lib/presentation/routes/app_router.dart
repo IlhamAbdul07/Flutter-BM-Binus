@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:bm_binus/data/models/event_model.dart';
+import 'package:bm_binus/data/models/event_detail_model.dart';
 import 'package:bm_binus/data/models/event_type_model.dart';
 import 'package:bm_binus/data/models/users_model.dart';
 import 'package:bm_binus/presentation/bloc/event_type/event_type_bloc.dart';
+import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/user/user_bloc.dart';
 import 'package:bm_binus/presentation/layout/main_layout.dart';
 import 'package:bm_binus/presentation/pages/add_event_page.dart';
@@ -73,8 +74,12 @@ GoRouter createRouter(AuthBloc authBloc) {
           GoRoute(
             path: '/event-detail',
             builder: (context, state) {
-              final event = state.extra as EventModel;
-              return EventDetailPage(event: event);
+              final event = state.extra as EventDetailModel;
+
+              return BlocProvider(
+                create: (_) => EventBloc(),
+                child: EventDetailPage(event: event),
+              );
             },
           ),
           GoRoute(
