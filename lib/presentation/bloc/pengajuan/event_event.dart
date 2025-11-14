@@ -71,3 +71,12 @@ class CreateEventRequested extends EventEvent {
     files
   ];
 }
+
+class DownloadEventDetailRequested extends EventEvent {
+  final int? reqId;
+
+  const DownloadEventDetailRequested(this.reqId);
+
+  @override
+  List<Object> get props => [reqId!];
+}

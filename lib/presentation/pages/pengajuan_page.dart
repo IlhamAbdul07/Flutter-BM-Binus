@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
@@ -169,11 +168,18 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                             if (!priorityState.usePriority) {
                                               final hasil = await PriorityDialog.show(context, events: data);
                                               if (hasil != null) {
-                                                log("complexity: ${hasil.toString()}");
                                                 final encodedComplexity = Uri.encodeComponent(jsonEncode(hasil));
                                                 final authState = context.read<AuthBloc>().state;
-                                                _loadEventsByRole(authState.roleName!, authState.id, ahp: "yes", complexity: encodedComplexity);
                                                 context.read<PriorityBloc>().add(TogglePriorityEvent(true));
+                                                _loadEventsByRole(authState.roleName!, authState.id, ahp: "yes", complexity: encodedComplexity);
+                                                await Future.delayed(const Duration(seconds: 1));
+                                                CustomSnackBar.show(
+                                                  context,
+                                                  icon: Icons.check_circle,
+                                                  title: "Success Use Priority (AHP)",
+                                                  message: "Pengajuan event telah diurut berdasarkan prioritas.",
+                                                  color: Colors.green,
+                                                );
                                               }
                                             } else {
                                               final authState = context.read<AuthBloc>().state;

@@ -76,7 +76,7 @@ class EventState extends Equatable {
   }) {
     return EventState(
       events: events ?? this.events,
-      singleEvent: singleEvent,
+      singleEvent: singleEvent ?? this.singleEvent,
       isLoading: isLoading ?? this.isLoading,
       errorFetch: errorFetch,
       isSuccessTrx: isSuccessTrx ?? this.isSuccessTrx,

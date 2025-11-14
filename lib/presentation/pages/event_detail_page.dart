@@ -194,6 +194,28 @@ class _EventDetailPageState extends State<EventDetailPage> {
     );
   }
 
+  String formatBM(DateTime createdAt) {
+    final day = createdAt.day.toString().padLeft(2, '0');
+    final month = createdAt.month.toString().padLeft(2, '0');
+    final year = createdAt.year.toString();
+
+    return 'BM-$day$month$year';
+  }
+
+  String _formatDateTime(DateTime dt) {
+    const months = [
+      "Jan","Feb","Mar","Apr","May","Jun",
+      "Jul","Aug","Sep","Oct","Nov","Dec"
+    ];
+
+    String month = months[dt.month - 1];
+    String hour12 = (dt.hour % 12 == 0 ? 12 : dt.hour % 12).toString();
+    String minute = dt.minute.toString().padLeft(2, '0');
+    String ampm = dt.hour >= 12 ? "PM" : "AM";
+
+    return "${dt.day} $month ${dt.year} | $hour12:$minute $ampm";
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -212,12 +234,20 @@ class _EventDetailPageState extends State<EventDetailPage> {
           actions: [
             TextButton.icon(
               onPressed: _refreshDetail,
-              icon: const Icon(Icons.refresh, color: Colors.white, size: 18),
+              style: TextButton.styleFrom(
+                side: const BorderSide(color: Colors.black, width: 1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+              icon: const Icon(Icons.refresh, color: Colors.black, size: 18),
               label: const Text(
-                'Detail Pengajuan Event',
-                style: TextStyle(color: Colors.white, fontSize: 13),
+                'Refresh Data',
+                style: TextStyle(color: Colors.black, fontSize: 13),
               ),
             ),
+            SizedBox(width: 30,)
           ],
         ),
         body: BlocListener<EventBloc, EventState>(
@@ -262,7 +292,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
               }
       
               if (state.singleEvent == null) {
-                return const SizedBox.shrink(); // atau loading, atau text kosong
+                return const SizedBox.shrink();
               }
       
               final data = state.singleEvent!;
@@ -283,57 +313,58 @@ class _EventDetailPageState extends State<EventDetailPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Icon(Icons.info_outline, color: Colors.blue),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Event #${data.id}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.info_outline, color: Colors.blue),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Event #${formatBM(data.createdAt)}',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      if (data.statusId == 5)...[
+                                        Text(
+                                          '   (Detail Pengajuan Event dapat di download)',
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
+                                  if (data.statusId == 5)...[
+                                    DownloadButton(reqId: data.id,)
+                                  ],
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              Text(
-                                'Dibuat: ${DateFormat('dd MMM yyyy').format(data.createdAt)}',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.orange.shade200),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                              RichText(
+                                text: TextSpan(
                                   children: [
-                                    Icon(
-                                      Icons.warning_amber_rounded,
-                                      size: 16,
-                                      color: Colors.orange.shade700,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Mode Dummy - Data tidak akan tersimpan',
+                                    TextSpan(
+                                      text: 'Pembaruan terakhir: ',
                                       style: TextStyle(
-                                        color: Colors.orange.shade700,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: _formatDateTime(data.updatedAt),
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                        fontStyle: FontStyle.italic, // <<< hanya bagian ini italic
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
+                              )
                             ],
                           ),
                         ),
@@ -958,3 +989,31 @@ class _EventDetailPageState extends State<EventDetailPage> {
     );
   }
 }
+
+class DownloadButton extends StatelessWidget {
+  final int? reqId;
+  const DownloadButton({super.key, this.reqId});
+ 
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<EventBloc, EventState>(
+      builder: (context, eventState) {
+        final isDownloading = eventState.isLoadingTrx;
+        return IconButton(
+          onPressed: () {
+            context.read<EventBloc>().add(DownloadEventDetailRequested(reqId));
+          },
+          icon: isDownloading
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green,),
+              )
+            : const Icon(Icons.download,color: Colors.green,),
+          tooltip: "Download Detail Pengajuan Event",
+        );
+      },
+    );
+  }
+}
+ 

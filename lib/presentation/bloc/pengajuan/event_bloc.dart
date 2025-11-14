@@ -1,4 +1,3 @@
-// import 'package:bm_binus/data/dummy/event_data.dart';
 import 'package:bm_binus/core/services/api_service.dart';
 import 'package:bm_binus/data/models/event_detail_model.dart';
 import 'package:bm_binus/data/models/event_model.dart';
@@ -167,6 +166,21 @@ class EventBloc extends Bloc<EventEvent, EventState> {
       } finally {
         emit(state.setLoadingTrx(false));
       }
+    });
+
+    on<DownloadEventDetailRequested>((event, emit) async {
+      emit(state.setLoadingTrx(true));
+      try {
+        final response = await ApiService.exportRequestById(event.reqId!);
+        if (response.statusCode == 200) {
+          await ApiService.downloadFileFromResponse(response);
+        } else {
+          emit(state.error("Gagal download data detail request"));
+        }
+      } catch (e) {
+        emit(state.error("Terjadi kesalahan: $e"));
+      }
+      emit(state.setLoadingTrx(false));
     });
   }
 }
