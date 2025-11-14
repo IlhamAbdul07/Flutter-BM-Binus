@@ -6,11 +6,11 @@ class PriorityDialog extends StatefulWidget {
 
   const PriorityDialog({super.key, this.events});
 
-  static Future<Map<String, int>?> show(
+  static Future<List<Map<String, dynamic>>?> show(
     BuildContext context, {
     List<EventModel>? events,
   }) {
-    return showDialog<Map<String, int>>(
+    return showDialog<List<Map<String, dynamic>>>(
       context: context,
       builder: (context) => PriorityDialog(events: events),
     );
@@ -27,7 +27,6 @@ class _PriorityDialogState extends State<PriorityDialog> {
   @override
   void initState() {
     super.initState();
-    // Ambil data dari parameter, fallback ke dummy kalau kosong
     _events = (widget.events != null && widget.events!.isNotEmpty)
         ? widget.events!
         : [];
@@ -41,7 +40,8 @@ class _PriorityDialogState extends State<PriorityDialog> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final dialogWidth = size.width * 0.8;
-    final maxDialogWidth = 400.0;
+    const maxDialogWidth = 400.0;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -50,9 +50,8 @@ class _PriorityDialogState extends State<PriorityDialog> {
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: maxDialogWidth,
-            minWidth: dialogWidth < maxDialogWidth
-                ? dialogWidth
-                : maxDialogWidth,
+            minWidth:
+                dialogWidth < maxDialogWidth ? dialogWidth : maxDialogWidth,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -61,6 +60,38 @@ class _PriorityDialogState extends State<PriorityDialog> {
                 "Tentukan Kompleksitas Event",
                 style: Theme.of(context).textTheme.titleLarge,
               ),
+              const SizedBox(height: 12),
+
+              // 🔹 Info box biru
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,  // Atur agar ikon tetap di tengah
+                  children: [
+                    const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Atur nilai kompleksitas setiap event dari 1 hingga 9.\n"
+                        "Nilai lebih tinggi menunjukkan event lebih kompleks, artinya semakin tidak diprioritaskan. "
+                        "Bisa diukur dari tingkat kesulitan pelaksanaan, koordinasi, serta kebutuhan sumber daya dan waktu.",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.blue.shade800,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              ),
+
               const SizedBox(height: 16),
 
               // daftar event dengan slider
@@ -69,8 +100,14 @@ class _PriorityDialogState extends State<PriorityDialog> {
                   child: Column(
                     children: _events.map((event) {
                       final value = _sliderValues[event.id] ?? 0;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      return Container(
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -78,9 +115,10 @@ class _PriorityDialogState extends State<PriorityDialog> {
                               event.eventName,
                               style: const TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
+                            const SizedBox(height: 4),
                             Row(
                               children: [
                                 Expanded(
@@ -90,6 +128,8 @@ class _PriorityDialogState extends State<PriorityDialog> {
                                     max: 9,
                                     divisions: 9,
                                     label: value.round().toString(),
+                                    activeColor: Colors.blue,
+                                    inactiveColor: Colors.blue.shade100,
                                     onChanged: (newValue) {
                                       setState(() {
                                         _sliderValues[event.id] = newValue;
@@ -104,6 +144,7 @@ class _PriorityDialogState extends State<PriorityDialog> {
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
+                                      color: Colors.blue,
                                     ),
                                   ),
                                 ),
@@ -119,19 +160,31 @@ class _PriorityDialogState extends State<PriorityDialog> {
 
               const SizedBox(height: 12),
 
-              // tombol OK
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                  ),
                   onPressed: () {
-                    final Map<String, int> hasil = {};
-                    for (var event in _events) {
-                      final value = _sliderValues[event.id]?.round() ?? 0;
-                      hasil[event.eventName] = value;
-                    }
+                    final List<Map<String, dynamic>> hasil = _events.map((event) {
+                      return {
+                        "id": event.id,
+                        "event_name": event.eventName,
+                        "complexity": _sliderValues[event.id]?.round() ?? 0,
+                      };
+                    }).toList();
+
                     Navigator.of(context).pop(hasil);
                   },
-                  child: const Text("OK"),
+                  icon: const Icon(Icons.check),
+                  label: const Text("Submit"),
                 ),
               ),
             ],

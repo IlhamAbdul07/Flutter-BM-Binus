@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/core/notifiers/session_notifier.dart';
 import 'package:bm_binus/core/services/socket_service.dart';
@@ -18,12 +19,27 @@ class MainLayout extends StatelessWidget {
   final Widget child;
   const MainLayout({super.key, required this.child});
 
+  AudioPlayer _createPlayer() {
+    final player = AudioPlayer();
+    player.setReleaseMode(ReleaseMode.stop);
+    return player;
+  }
+
   Future<void> _initializeSocket(String userId, NotificationBloc bloc) async {
+    final player = _createPlayer();
+
     await socketServiceManager.getOrCreateAndConnect(
       userId: userId,
       onDataReceive: (data) async {
         try {
           if (data['is_new'] == true) {
+            try {
+              await player.play(
+                AssetSource('sounds/notif_sound.mp3'),
+              );
+            } catch (e) {
+              log("⚠️ Error play sound: $e");
+            }
             bloc.add(LoadNotificationsEvent());
           }
         } catch (e) {
@@ -111,45 +127,51 @@ PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
                 }
               },
               builder: (context, state) {
-                return Stack(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.notifications,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      onPressed: () {
-                        NotificationDialog.show(context);
-                      },
-                    ),
-                    // Sekarang bisa akses state.unreadCount
-                    if (state.unreadCount > 0)
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Text(
-                            '${state.unreadCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
+                return MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
+                      NotificationDialog.show(context);
+                    },
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Icon(
+                            Icons.notifications,
+                            color: Colors.white,
+                            size: 30,
                           ),
                         ),
-                      ),
-                  ],
+                        if (state.unreadCount > 0)
+                          Positioned(
+                            right: 2,
+                            top: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 18,
+                                minHeight: 18,
+                              ),
+                              child: Text(
+                                '${state.unreadCount}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 );
               },
             ),

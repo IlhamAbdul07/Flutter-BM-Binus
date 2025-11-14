@@ -93,7 +93,8 @@ class EventBloc extends Bloc<EventEvent, EventState> {
             return;
           }
 
-          final EventDetailModel event = data.map((item) => EventDetailModel(
+          final item = data;
+          final eventDetail = EventDetailModel(
             id: item['id'] ?? 0,
             eventName: item['event_name'] ?? "",
             eventLocation: item['event_location'] ?? "",
@@ -109,9 +110,9 @@ class EventBloc extends Bloc<EventEvent, EventState> {
             countParticipant: item['count_participant'] ?? 0,
             createdAt: DateTime.parse(item['created_at']),
             updatedAt: DateTime.parse(item['updated_at']),
-          ));
+          );
 
-          emit(state.successDetail(event));
+          emit(state.successDetail(eventDetail));
         } else {
           emit(state.error("Gagal memuat data single event"));
         }

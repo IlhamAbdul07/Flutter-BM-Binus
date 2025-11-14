@@ -3,9 +3,10 @@ import 'package:bm_binus/data/models/notification_model.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_bloc.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_event.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_state.dart';
-import 'package:bm_binus/presentation/widgets/custom_snackbar.dart';
+// import 'package:bm_binus/presentation/widgets/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class NotificationDialog extends StatelessWidget {
   const NotificationDialog({super.key});
@@ -38,14 +39,12 @@ class NotificationDialog extends StatelessWidget {
             Expanded(
               child: BlocConsumer<NotificationBloc, NotificationState>(
                 listener: (context, state) {
-                  if (state.requestId != null){
-                    CustomSnackBar.show(
-                      context,
-                      icon: Icons.check_circle,
-                      title: 'success set read!',
-                      message: 'Request ID: ${state.requestId}',
-                      color: Colors.green,
-                    );
+                  if (state.requestId != null) {
+                    final reqId = state.requestId;
+                    Navigator.pop(context);
+                    Future.microtask(() {
+                      context.push('/event-detail', extra: reqId);
+                    });
                     state.setRequestId(null);
                   }
                 },

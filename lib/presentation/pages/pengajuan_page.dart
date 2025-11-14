@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:developer';
 import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
@@ -7,6 +9,7 @@ import 'package:bm_binus/presentation/bloc/pengajuan/event_state.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/priority_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/priority_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/priority_state.dart';
+import 'package:bm_binus/presentation/widgets/custom_snackbar.dart';
 import 'package:bm_binus/presentation/widgets/priority_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,12 +27,16 @@ class PengajuanPage extends StatefulWidget {
  
 class _PengajuanPageState extends State<PengajuanPage> {
 
-  void _loadEventsByRole(String roleName, int? userId) {
+  void _loadEventsByRole(String roleName, int? userId, {String? ahp, String? complexity}) {
     final eventBloc = context.read<EventBloc>();
     if (roleName == 'Staf Binus') {
       eventBloc.add(LoadsEventRequested(userId, null, null));
     } else if (roleName == 'Building Management') {
-      eventBloc.add(LoadsEventRequested(null, null, null));
+      if (ahp != null || complexity != null){
+        eventBloc.add(LoadsEventRequested(null, ahp, complexity));
+      }else{
+        eventBloc.add(LoadsEventRequested(null, null, null));
+      }
     } else if (roleName == 'Admin ISS') {
       eventBloc.add(LoadsEventRequested(null, null, null));
     }
@@ -50,11 +57,6 @@ class _PengajuanPageState extends State<PengajuanPage> {
       default:
         return Colors.green;
     }
-  }
-
-  void _onRowTap(EventModel event) {
-    context.read<EventBloc>().add(LoadDetailEventRequested(event.id));
-    context.push('/event-detail', extra: event);
   }
 
   @override
@@ -117,7 +119,28 @@ class _PengajuanPageState extends State<PengajuanPage> {
                           children: [
                             DownloadButton(userId: authState.id,),
                             const SizedBox(width: 10,),
-                            const AddEventButton(),
+                            SizedBox(
+                              child: TextButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: CustomColors.oranges,
+                                  iconColor: Colors.white,
+                                  iconSize: 20.0,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                                onPressed: () async {
+                                  final result = await context.push('/addevent');
+                                  if (result == true && context.mounted) {
+                                    final authState = context.read<AuthBloc>().state;
+                                    _loadEventsByRole(authState.roleName!, authState.id);
+                                  }
+                                },
+                                label: const Text(
+                                  "Tambah Event",
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                                icon: const Icon(Icons.add),
+                              ),
+                            )
                           ],
                         );
                         
@@ -133,7 +156,43 @@ class _PengajuanPageState extends State<PengajuanPage> {
                           children: [
                             DownloadButton(),
                             const SizedBox(width: 10,),
-                            PrioritySwitchButton(data: data)
+                            BlocBuilder<PriorityBloc, PriorityState>(
+                              builder: (context, priorityState) {
+                                return SizedBox(
+                                  child: TextButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: priorityState.usePriority ? Colors.orange : Colors.grey,
+                                    ),
+                                    onPressed: priorityState.isLoading
+                                        ? null
+                                        : () async {
+                                            if (!priorityState.usePriority) {
+                                              final hasil = await PriorityDialog.show(context, events: data);
+                                              if (hasil != null) {
+                                                log("complexity: ${hasil.toString()}");
+                                                final encodedComplexity = Uri.encodeComponent(jsonEncode(hasil));
+                                                final authState = context.read<AuthBloc>().state;
+                                                _loadEventsByRole(authState.roleName!, authState.id, ahp: "yes", complexity: encodedComplexity);
+                                                context.read<PriorityBloc>().add(TogglePriorityEvent(true));
+                                              }
+                                            } else {
+                                              final authState = context.read<AuthBloc>().state;
+                                              _loadEventsByRole(authState.roleName!, authState.id);
+                                              context.read<PriorityBloc>().add(TogglePriorityEvent(false));
+                                            }
+                                          },
+                                    label: Text(
+                                      priorityState.usePriority ? "Priority: ON" : "Priority: OFF",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    icon: Icon(priorityState.usePriority ? Icons.star : Icons.star_border, color: Colors.white,),
+                                  ),
+                                );
+                              },
+                            )
                           ],
                         );
                       case 'Admin ISS':
@@ -151,54 +210,22 @@ class _PengajuanPageState extends State<PengajuanPage> {
           Expanded(
             child: BlocConsumer<EventBloc, EventState>(
               listener: (context, state) {
-                // if (state is EventOperationSuccess) {
-                //   ScaffoldMessenger.of(context).showSnackBar(
-                //     SnackBar(
-                //       content: Text(state.message),
-                //       backgroundColor: Colors.green,
-                //       duration: const Duration(seconds: 2),
-                //     ),
-                //   );
-                // } else if (state is EventError) {
-                //   ScaffoldMessenger.of(context).showSnackBar(
-                //     SnackBar(
-                //       content: Text(state.message),
-                //       backgroundColor: Colors.red,
-                //       duration: const Duration(seconds: 2),
-                //     ),
-                //   );
-                // }
+                if (state.errorFetch != null) {
+                  CustomSnackBar.show(
+                    context,
+                    icon: Icons.error,
+                    title: 'Error Fetch Request Data',
+                    message: state.errorFetch!,
+                    color: Colors.red,
+                  );
+                }
               },
               builder: (context, state) {
                 if (state.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
- 
-                if (state.errorFetch != null) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red.shade300,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          state.errorFetch!,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            final authState = context.read<AuthBloc>().state;
-                            _loadEventsByRole(authState.roleName!, authState.id);
-                          },
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Refresh Data'),
-                        ),
-                      ],
+                  return const Center(
+                    child: Text(
+                      '⏳ Mohon tunggu, sedang memuat data...',
+                      style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   );
                 }
@@ -209,7 +236,6 @@ class _PengajuanPageState extends State<PengajuanPage> {
                 } else if (!state.isLoading) {
                   data = state.events;
                 }
-                debugPrint(data.toString());
 
                 // filter for admin
                 final authState = context.read<AuthBloc>().state;
@@ -363,8 +389,13 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                   itemBuilder: (context, index) {
                                                     final item = data[index];
                                                     return InkWell(
-                                                      onTap: () =>
-                                                          _onRowTap(item),
+                                                      onTap: () async {
+                                                        final result = await context.push('/event-detail', extra: item.id);
+                                                        if (result == true && context.mounted) {
+                                                          final authState = context.read<AuthBloc>().state;
+                                                          _loadEventsByRole(authState.roleName!, authState.id);
+                                                        }
+                                                      },
                                                       hoverColor:
                                                           Colors.orange.shade50,
                                                       child: Container(
@@ -627,7 +658,13 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                             itemBuilder: (context, index) {
                                               final item = data[index];
                                               return InkWell(
-                                                onTap: () => _onRowTap(item),
+                                                onTap: () async {
+                                                  final result = await context.push('/event-detail', extra: item.id);
+                                                  if (result == true && context.mounted) {
+                                                    final authState = context.read<AuthBloc>().state;
+                                                    _loadEventsByRole(authState.roleName!, authState.id);
+                                                  }
+                                                },
                                                 hoverColor:
                                                     Colors.orange.shade50,
                                                 child: Container(
@@ -733,73 +770,6 @@ class DownloadButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent[700],
             ),
-          ),
-        );
-      },
-    );
-  }
-}
- 
-class AddEventButton extends StatelessWidget {
-  const AddEventButton({super.key});
- 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      child: TextButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: CustomColors.oranges,
-          iconColor: Colors.white,
-          iconSize: 20.0,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-        onPressed: () {
-          context.go('/addevent');
-        },
-        label: const Text(
-          "Tambah Event",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        icon: const Icon(Icons.add),
-      ),
-    );
-  }
-}
- 
-class PrioritySwitchButton extends StatelessWidget {
-  final List<EventModel> data;
- 
-  const PrioritySwitchButton({super.key, required this.data});
- 
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<PriorityBloc, PriorityState>(
-      builder: (context, priorityState) {
-        return SizedBox(
-          child: TextButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: priorityState.usePriority ? Colors.orange : Colors.grey,
-            ),
-            onPressed: priorityState.isLoading
-                ? null
-                : () async {
-                    if (!priorityState.usePriority) {
-                      final hasil = await PriorityDialog.show(context, events: data);
-                      if (hasil != null) {
-                        context.read<PriorityBloc>().add(TogglePriorityEvent(true));
-                      }
-                    } else {
-                      context.read<PriorityBloc>().add(TogglePriorityEvent(false));
-                    }
-                  },
-            label: Text(
-              priorityState.usePriority ? "Priority: ON" : "Priority: OFF",
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            icon: Icon(priorityState.usePriority ? Icons.star : Icons.star_border, color: Colors.white,),
           ),
         );
       },

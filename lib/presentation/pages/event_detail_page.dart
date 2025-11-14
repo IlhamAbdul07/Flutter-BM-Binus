@@ -1,9 +1,8 @@
 import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/core/constants/ui_helpers.dart';
 import 'package:bm_binus/data/dummy/komentar_data.dart';
-import 'package:bm_binus/data/models/event_detail_model.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
-// import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
+import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_state.dart';
 import 'package:bm_binus/presentation/widgets/custom_dialog.dart';
 import 'package:bm_binus/presentation/widgets/custom_input_dialog.dart';
@@ -12,13 +11,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-// import 'package:bm_binus/data/models/event_model.dart';
 import 'package:bm_binus/data/models/komentar_model.dart';
 
 class EventDetailPage extends StatefulWidget {
-  final EventDetailModel event;
+  final int requestId;
 
-  const EventDetailPage({super.key, required this.event});
+  const EventDetailPage({super.key, required this.requestId});
 
   @override
   State<EventDetailPage> createState() => _EventDetailPageState();
@@ -36,8 +34,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
   late TextEditingController _eventTipeController;
   late TextEditingController _statusController;
 
-  late DateTime _tglMulai;
-  late DateTime _tglSelesai;
+  late DateTime? _tglMulai;
+  late DateTime? _tglSelesai;
   bool _isUpdating = false;
 
   late List<KomentarModel> _komentarList;
@@ -54,28 +52,32 @@ class _EventDetailPageState extends State<EventDetailPage> {
     super.initState();
     _initializeControllers();
     _loadKomentar();
+
+    // Future.microtask(() {
+    //   context.read<EventBloc>().add(LoadDetailEventRequested(widget.requestId));
+    // });
   }
 
   void _initializeControllers() {
-    _staffController = TextEditingController(text: widget.event.userName);
-    _eventController = TextEditingController(text: widget.event.eventName);
-    _lokasiController = TextEditingController(text: widget.event.eventLocation);
-    _eventTipeController = TextEditingController(text: widget.event.eventTypeName);
-    _statusController = TextEditingController(text: widget.event.statusName);
+    _staffController = TextEditingController(text: '');
+    _eventController = TextEditingController(text: '');
+    _lokasiController = TextEditingController(text: '');
+    _eventTipeController = TextEditingController(text: '');
+    _statusController = TextEditingController(text: '');
 
-    _tglMulai = widget.event.eventDateStart;
-    _tglSelesai = widget.event.eventDateEnd;
+    _tglMulai = null;
+    _tglSelesai = null;
 
     _tglMulaiController = TextEditingController(
-      text: DateFormat('dd MMM yyyy').format(_tglMulai),
+      text: "",
     );
     _tglSelesaiController = TextEditingController(
-      text: DateFormat('dd MMM yyyy').format(_tglSelesai),
+      text: "",
     );
   }
 
   void _loadKomentar() {
-    _komentarList = KomentarData.getKomentarForEvent(widget.event.id);
+    _komentarList = KomentarData.getKomentarForEvent(widget.requestId);
   }
 
   @override
@@ -89,6 +91,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
     _statusController.dispose();
     _komentarController.dispose();
     super.dispose();
+  }
+
+  void _refreshDetail() {
+    context.read<EventBloc>().add(LoadDetailEventRequested(widget.requestId));
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
@@ -190,348 +196,391 @@ class _EventDetailPageState extends State<EventDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Detail Pengajuan Event',
-          style: TextStyle(fontWeight: FontWeight.bold),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          context.pop(true);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Detail Pengajuan Event',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: _refreshDetail,
+              icon: const Icon(Icons.refresh, color: Colors.white, size: 18),
+              label: const Text(
+                'Detail Pengajuan Event',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ],
         ),
-      ),
-      body: BlocListener<EventBloc, EventState>(
-        listener: (context, state) {
-          // if (state is EventOperationSuccess) {
-          //   setState(() => _isUpdating = false);
-
-          //   CustomSnackBar.show(
-          //     context,
-          //     icon: Icons.error,
-          //     title: 'SUKSES',
-          //     message: state.message,
-          //     color: Colors.green,
-          //   );
-          // } else if (state is EventError) {
-          //   setState(() => _isUpdating = false);
-
-          //   CustomSnackBar.show(
-          //     context,
-          //     icon: Icons.error,
-          //     title: 'Error',
-          //     message: state.message,
-          //     color: Colors.red,
-          //   );
-          // }
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Info Card
-                Card(
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.info_outline, color: Colors.blue),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Event #${widget.event.id}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Dibuat: ${DateFormat('dd MMM yyyy').format(widget.event.createdAt)}',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.orange.shade200),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+        body: BlocListener<EventBloc, EventState>(
+          listener: (context, state) {
+            if (state.singleEvent != null && !state.isLoading) {
+              final event = state.singleEvent!;
+              setState(() {
+                _staffController.text = event.userName;
+                _eventController.text = event.eventName;
+                _lokasiController.text = event.eventLocation;
+                _eventTipeController.text = event.eventTypeName;
+                _statusController.text = event.statusName;
+      
+                _tglMulai = event.eventDateStart;
+                _tglSelesai = event.eventDateEnd;
+                _tglMulaiController.text =
+                    DateFormat('dd MMM yyyy').format(_tglMulai!);
+                _tglSelesaiController.text =
+                    DateFormat('dd MMM yyyy').format(_tglSelesai!);
+              });
+            }
+      
+            if (state.errorFetch != null) {
+              CustomSnackBar.show(
+                context,
+                icon: Icons.error,
+                title: 'Error',
+                message: state.errorFetch!,
+                color: Colors.red,
+              );
+            }
+          },
+          child: BlocBuilder<EventBloc, EventState>(
+            builder: (context, state){
+              if (state.isLoading) {
+                return const Center(
+                  child: Text(
+                    '⏳ Mohon tunggu, sedang memuat data...',
+                    style: TextStyle(fontSize: 16, color: Colors.black),
+                  ),
+                );
+              }
+      
+              if (state.singleEvent == null) {
+                return const SizedBox.shrink(); // atau loading, atau text kosong
+              }
+      
+              final data = state.singleEvent!;
+      
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Info Card
+                      Card(
+                        elevation: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.warning_amber_rounded,
-                                size: 16,
-                                color: Colors.orange.shade700,
+                              Row(
+                                children: [
+                                  const Icon(Icons.info_outline, color: Colors.blue),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Event #${data.id}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(height: 8),
                               Text(
-                                'Mode Dummy - Data tidak akan tersimpan',
+                                'Dibuat: ${DateFormat('dd MMM yyyy').format(data.createdAt)}',
                                 style: TextStyle(
-                                  color: Colors.orange.shade700,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.orange.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.warning_amber_rounded,
+                                      size: 16,
+                                      color: Colors.orange.shade700,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Mode Dummy - Data tidak akan tersimpan',
+                                      style: TextStyle(
+                                        color: Colors.orange.shade700,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Form Fields
-                _buildTextField(
-                  controller: _staffController,
-                  label: 'Nama Staf',
-                  icon: Icons.person,
-                ),
-                const SizedBox(height: 16),
-
-                _buildTextField(
-                  controller: _eventController,
-                  label: 'Nama Event',
-                  icon: Icons.event,
-                ),
-                const SizedBox(height: 16),
-
-                _buildTextField(
-                  controller: _lokasiController,
-                  label: 'Lokasi Event',
-                  icon: Icons.location_on,
-                ),
-                const SizedBox(height: 16),
-
-                // Date Fields
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDateField(
-                        controller: _tglMulaiController,
-                        label: 'Tanggal Mulai',
-                        onTap: () => _selectDate(context, true),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildDateField(
-                        controller: _tglSelesaiController,
-                        label: 'Tanggal Selesai',
-                        onTap: () => _selectDate(context, false),
+                      const SizedBox(height: 24),
+              
+                      // Form Fields
+                      _buildTextField(
+                        controller: _staffController,
+                        label: 'Nama Staf',
+                        icon: Icons.person,
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                _buildTextField(
-                  controller: _eventTipeController,
-                  label: 'Tipe Event',
-                  icon: Icons.category,
-                ),
-                const SizedBox(height: 16),
-
-                _buildTextField(
-                  controller: _statusController,
-                  label: 'Status',
-                  icon: Icons.flag,
-                ),
-                const SizedBox(height: 24),
-
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isUpdating ? null : _handleUpdate,
-                        icon: _isUpdating
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.save),
-                        label: Text(
-                          _isUpdating ? 'Updating...' : 'Update Event',
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: CustomColors.oranges,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                      const SizedBox(height: 16),
+              
+                      _buildTextField(
+                        controller: _eventController,
+                        label: 'Nama Event',
+                        icon: Icons.event,
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _isUpdating ? null : _handleDelete,
-                        icon: const Icon(Icons.delete),
-                        label: const Text('Hapus Event'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: const BorderSide(color: Colors.red),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                      const SizedBox(height: 16),
+              
+                      _buildTextField(
+                        controller: _lokasiController,
+                        label: 'Lokasi Event',
+                        icon: Icons.location_on,
                       ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 40),
-                const Divider(thickness: 2),
-                const SizedBox(height: 24),
-
-                // 📎 SECTION FILE UPLOAD
-                _buildFileUploadSection(),
-
-                const SizedBox(height: 40),
-                const Divider(thickness: 2),
-                const SizedBox(height: 24),
-
-                // 💬 SECTION KOMENTAR
-                Row(
-                  children: [
-                    const Icon(Icons.comment_outlined, color: Colors.blue),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Komentar',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${_komentarList.length}',
-                        style: TextStyle(
-                          color: Colors.blue.shade700,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // List Komentar
-                if (_komentarList.isEmpty)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Column(
+                      const SizedBox(height: 16),
+              
+                      // Date Fields
+                      Row(
                         children: [
-                          Icon(
-                            Icons.chat_bubble_outline,
-                            size: 64,
-                            color: Colors.grey.shade300,
+                          Expanded(
+                            child: _buildDateField(
+                              controller: _tglMulaiController,
+                              label: 'Tanggal Mulai',
+                              onTap: () => _selectDate(context, true),
+                            ),
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Belum ada komentar',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 16,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildDateField(
+                              controller: _tglSelesaiController,
+                              label: 'Tanggal Selesai',
+                              onTap: () => _selectDate(context, false),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  )
-                else
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _komentarList.length,
-                    itemBuilder: (context, index) {
-                      final komentar = _komentarList[index];
-                      return _buildKomentarCard(komentar);
-                    },
-                  ),
-                const SizedBox(height: 24),
-
-                // Form Input Komentar
-                Card(
-                  elevation: 1,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextField(
-                          controller: _komentarController,
-                          maxLines: 3,
-                          decoration: InputDecoration(
-                            hintText: 'Tulis komentar Anda...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[50],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: ElevatedButton.icon(
-                            onPressed: _handleKirimKomentar,
-                            icon: const Icon(Icons.send, size: 18),
-                            label: const Text('Kirim Komentar'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
+                      const SizedBox(height: 16),
+              
+                      _buildTextField(
+                        controller: _eventTipeController,
+                        label: 'Tipe Event',
+                        icon: Icons.category,
+                      ),
+                      const SizedBox(height: 16),
+              
+                      _buildTextField(
+                        controller: _statusController,
+                        label: 'Status',
+                        icon: Icons.flag,
+                      ),
+                      const SizedBox(height: 24),
+              
+                      // Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _isUpdating ? null : _handleUpdate,
+                              icon: _isUpdating
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save),
+                              label: Text(
+                                _isUpdating ? 'Updating...' : 'Update Event',
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: CustomColors.oranges,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                             ),
                           ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _isUpdating ? null : _handleDelete,
+                              icon: const Icon(Icons.delete),
+                              label: const Text('Hapus Event'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              
+                      const SizedBox(height: 40),
+                      const Divider(thickness: 2),
+                      const SizedBox(height: 24),
+              
+                      // 📎 SECTION FILE UPLOAD
+                      _buildFileUploadSection(),
+              
+                      const SizedBox(height: 40),
+                      const Divider(thickness: 2),
+                      const SizedBox(height: 24),
+              
+                      // 💬 SECTION KOMENTAR
+                      Row(
+                        children: [
+                          const Icon(Icons.comment_outlined, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Komentar',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${_komentarList.length}',
+                              style: TextStyle(
+                                color: Colors.blue.shade700,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+              
+                      // List Komentar
+                      if (_komentarList.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.chat_bubble_outline,
+                                  size: 64,
+                                  color: Colors.grey.shade300,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Belum ada komentar',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _komentarList.length,
+                          itemBuilder: (context, index) {
+                            final komentar = _komentarList[index];
+                            return _buildKomentarCard(komentar);
+                          },
                         ),
-                      ],
-                    ),
+                      const SizedBox(height: 24),
+              
+                      // Form Input Komentar
+                      Card(
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextField(
+                                controller: _komentarController,
+                                maxLines: 3,
+                                decoration: InputDecoration(
+                                  hintText: 'Tulis komentar Anda...',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.grey[50],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: ElevatedButton.icon(
+                                  onPressed: _handleKirimKomentar,
+                                  icon: const Icon(Icons.send, size: 18),
+                                  label: const Text('Kirim Komentar'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),

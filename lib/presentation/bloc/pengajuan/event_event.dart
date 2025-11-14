@@ -36,37 +36,3 @@ class LoadDetailEventRequested extends EventEvent {
   @override
   List<Object> get props => [requestId];
 }
-
-// class CreateEventRequested extends EventEvent {
-//   final String name;
-//   final String email;
-//   final int roleId;
-
-//   const CreateEventRequested(this.name, this.email, this.roleId);
-
-//   @override
-//   List<Object> get props => [name, email, roleId];
-// }
-
-// class UpdateEventRequested extends EventEvent {
-//   final int userId;
-//   final String? name;
-//   final String? email;
-//   final int? roleId;
-
-//   const UpdateEventRequested(this.userId, this.name, this.email, this.roleId);
-
-//   @override
-//   List<Object> get props => [userId, name!, email!, roleId!];
-// }
-
-// class DeleteEventRequested extends EventEvent {
-//   final int userId;
-
-//   const DeleteEventRequested(this.userId);
-
-//   @override
-//   List<Object> get props => [userId];
-// }
-
-// class DownloadEventsEvent extends EventEvent {}

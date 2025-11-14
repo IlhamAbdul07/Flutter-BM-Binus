@@ -32,7 +32,12 @@ class _DashboardPageState extends State<DashboardPage> {
               }
 
               if (state.isLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(
+                  child: Text(
+                    '⏳ Mohon tunggu, sedang memuat data...',
+                    style: TextStyle(fontSize: 16, color: Colors.black),
+                  ),
+                );
               }
 
               if (state.errorMessage != null) {
@@ -40,7 +45,12 @@ class _DashboardPageState extends State<DashboardPage> {
               }
 
               if (state.statusDashboard == null || state.typeDashboard == null) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(
+                  child: Text(
+                    '⏳ Mohon tunggu, sedang memuat data...',
+                    style: TextStyle(fontSize: 16, color: Colors.black),
+                  ),
+                );
               }
 
               return ListView(
