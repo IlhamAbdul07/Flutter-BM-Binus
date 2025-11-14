@@ -346,8 +346,8 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                         'Nama Staf',
                                                         'Nama Event',
                                                         'Lokasi Event',
-                                                        'Waktu Mulai',
-                                                        'Waktu Selesai',
+                                                        'Tanggal Mulai',
+                                                        'Tanggal Selesai',
                                                         'Jenis Event',
                                                         'Tanggal Pengajuan',
                                                       ].asMap().entries.map((

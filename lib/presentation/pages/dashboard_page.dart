@@ -18,12 +18,25 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   bool _hasFetched = false;
 
+  Color _getRoleColor(int roleId) {
+    switch (roleId) {
+      case 1:
+        return Colors.blue[700]!;
+      case 2:
+        return Colors.purple[700]!;
+      case 3:
+        return Colors.orange[700]!;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
         return BlocProvider(
-          create: (_) => DashboardBloc()..add(FetchDashboardData(authState.roleId ?? 0)),
+          create: (_) => DashboardBloc(),
           child: BlocBuilder<DashboardBloc, DashboardState>(
             builder: (context, state){
               if (!_hasFetched && authState.roleId != null) {
@@ -66,9 +79,28 @@ class _DashboardPageState extends State<DashboardPage> {
                     style: const TextStyle(fontSize: 18),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Peran kamu: ${authState.roleName ?? '-'}',
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  Row(
+                    children: [
+                      Text(
+                        'Peran kamu: ',
+                        style: const TextStyle(fontSize: 16, color: Colors.black),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _getRoleColor(authState.roleId!),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          authState.roleName!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   if (authState.roleId == 2) ...[
                     const SizedBox(height: 24),

@@ -84,7 +84,7 @@ class MainLayout extends StatelessWidget {
 }
 
 PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
-  // context.read<NotificationBloc>().add(LoadNotificationsEvent());
+  context.read<NotificationBloc>().add(LoadNotificationsEvent());
   return AppBar(
     title: Row(
       spacing: 10,
@@ -188,7 +188,7 @@ PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
 }
 
 PreferredSizeWidget buildAppBarMobile(BuildContext context) {
-  // context.read<NotificationBloc>().add(LoadNotificationsEvent());
+  context.read<NotificationBloc>().add(LoadNotificationsEvent());
   return AppBar(
     backgroundColor: CustomColors.primary,
     title: Row(

@@ -73,8 +73,8 @@ class _EventTypeFormPageState extends State<EventTypeFormPage> {
                 : ""),
               message: (state.typeTrx != null ? (
                 state.typeTrx == "create" ? "Event Type berhasil ditambahkan" : 
-                state.typeTrx == "update" ? "Event Type berhasil diupdate" : 
-                state.typeTrx == "delete" ? "Event Type berhasil didelete" : "") 
+                state.typeTrx == "update" ? "Event Type berhasil diedit" : 
+                state.typeTrx == "delete" ? "Event Type berhasil dihapus" : "") 
                 : ""),
               color: Colors.green,
             );

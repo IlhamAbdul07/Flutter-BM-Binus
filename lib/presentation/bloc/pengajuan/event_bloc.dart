@@ -120,5 +120,53 @@ class EventBloc extends Bloc<EventEvent, EventState> {
         emit(state.error("Terjadi kesalahan: $e"));
       }
     });
+
+    on<CreateEventRequested>((event, emit) async {
+      emit(state.setLoadingTrx(true));
+      try {
+        final response = await ApiService.handleRequest(method: 'POST', data: {
+          'event_name': event.eventName,
+          'event_location': event.eventLocation,
+          'event_date_start': event.eventDateStart,
+          'event_date_end': event.eventDateEnd,
+          'description': event.description,
+          'event_type_id': event.eventTypeId,
+          'count_participant': event.countParticipant,
+        }, listFile: event.files, contentType: 'multipart/form-data');
+
+        if (response != null && response['success'] == true) {
+          emit(EventState(isSuccessTrx: true, errorTrx: null));
+        } else {
+          if (response != null && response['data'] != null) {
+            final message = response['data']?['message'] ?? 'Terjadi kesalahan yang tidak diketahui';
+            final translatedMessage = message.toString().contains('not approved')
+                ? 'Format berkas yang diunggah tidak didukung.'
+                : message;
+            emit(
+              EventState(
+                isSuccessTrx: false,
+                errorTrx: translatedMessage,
+              ),
+            );
+          } else {
+            emit(
+              EventState(
+                isSuccessTrx: false,
+                errorTrx: response?['message'] ?? 'Terjadi kesalahan yang tidak diketahui',
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        emit(
+          EventState(
+            isSuccessTrx: false,
+            errorTrx: '$e',
+          ),
+        );
+      } finally {
+        emit(state.setLoadingTrx(false));
+      }
+    });
   }
 }

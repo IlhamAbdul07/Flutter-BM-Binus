@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bm_binus/data/models/event_type_model.dart';
 import 'package:bm_binus/data/models/users_model.dart';
 import 'package:bm_binus/presentation/bloc/event_type/event_type_bloc.dart';
+import 'package:bm_binus/presentation/bloc/event_type/event_type_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
 import 'package:bm_binus/presentation/bloc/user/user_bloc.dart';
@@ -112,7 +113,21 @@ GoRouter createRouter(AuthBloc authBloc) {
           ),
           GoRoute(
             path: '/addevent',
-            builder: (context, state) => const AddEventPage(),
+            pageBuilder: (context, state){
+              return MaterialPage(
+                child: MultiBlocProvider(
+                  providers: [
+                    BlocProvider<EventTypeBloc>(
+                      create: (_) => EventTypeBloc()..add(LoadEventTypeEvent()),
+                    ),
+                    BlocProvider<EventBloc>(
+                      create: (_) => EventBloc(),
+                    ),
+                  ], 
+                  child: const AddEventPage(),
+                )
+              );
+            },
           ),
           GoRoute(path: '/ahp', builder: (context, state) => const AhpPage()),
         ],

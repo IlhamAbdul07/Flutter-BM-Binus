@@ -113,8 +113,8 @@ class _UserFormPageState extends State<UserFormPage> {
                 : ""),
               message: (state.typeTrx != null ? (
                 state.typeTrx == "create" ? "User berhasil ditambahkan, cek email untuk mendapatkan informasi login." : 
-                state.typeTrx == "update" ? "User berhasil diupdate" : 
-                state.typeTrx == "delete" ? "User berhasil didelete" : "") 
+                state.typeTrx == "update" ? "User berhasil diedit" : 
+                state.typeTrx == "delete" ? "User berhasil dihapus" : "") 
                 : ""),
               color: Colors.green,
             );
