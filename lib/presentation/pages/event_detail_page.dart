@@ -42,7 +42,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
   late TextEditingController _jumlahPesertaController;
   int? _selectedStatusId;
 
-  bool _isUpdating = false;
+  bool _handledTrx = false;
 
   late List<KomentarModel> _komentarList;
   final _komentarController = TextEditingController();
@@ -173,49 +173,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
     }
   }
 
-  void _handleUpdate() {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isUpdating = true);
-
-      // final updatedEvent = widget.event.copyWith(
-      //   staff: _staffController.text,
-      //   event: _eventController.text,
-      //   lokasi: _lokasiController.text,
-      //   tglMulai: _tglMulai,
-      //   tglSelesai: _tglSelesai,
-      //   eventTipe: _eventTipeController.text,
-      //   status: _statusController.text,
-      // );
-
-      // context.read<EventBloc>().add(UpdateEvent(updatedEvent));
-    }
-  }
-
-  void _handleDelete() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Konfirmasi Hapus'),
-        content: const Text('Apakah Anda yakin ingin menghapus event ini?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              // context.read<EventBloc>().add(DeleteEvent(widget.event.id));
-              context.pop();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hapus'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _handleKirimKomentar() {
     if (_komentarController.text.trim().isEmpty) {
       CustomSnackBar.show(
@@ -271,6 +228,18 @@ class _EventDetailPageState extends State<EventDetailPage> {
     return "${dt.day} $month ${dt.year} | $hour12:$minute $ampm";
   }
 
+  String formatToDateTimeSql(DateTime dt) {
+    String year = dt.year.toString();
+    String month = dt.month.toString().padLeft(2, '0');
+    String day = dt.day.toString().padLeft(2, '0');
+
+    String hour = dt.hour.toString().padLeft(2, '0');
+    String minute = dt.minute.toString().padLeft(2, '0');
+    String second = dt.second.toString().padLeft(2, '0');
+
+    return "$year-$month-$day $hour:$minute:$second";
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -306,7 +275,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
           ],
         ),
         body: BlocListener<EventBloc, EventState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state.singleEvent != null && !state.isLoading) {
               final event = state.singleEvent!;
               setState(() {
@@ -332,6 +301,54 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 message: state.errorFetch!,
                 color: Colors.red,
               );
+            }
+
+            if (!_handledTrx) {
+              if (state.isSuccessTrx) {
+                _handledTrx = true;
+
+                CustomSnackBar.show(
+                  context,
+                  icon: Icons.check_circle,
+                  title: state.typeTrx == 'update'
+                      ? "Success Update Event"
+                      : "Success Delete Event",
+                  message: state.typeTrx == 'update'
+                      ? "Pengajuan Event berhasil diedit"
+                      : "Pengajuan Event berhasil dihapus",
+                  color: Colors.green,
+                );
+
+                if (state.typeTrx == "update") {
+                  _refreshDetail();
+                } else if (state.typeTrx == "delete") {
+                  if (context.mounted) context.pop(true);
+                }
+
+                context.read<EventBloc>().add(ResetTrxStateRequested());
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _handledTrx = false;
+                });
+              } else if (state.errorTrx != null) {
+                _handledTrx = true;
+
+                CustomSnackBar.show(
+                  context,
+                  icon: Icons.error,
+                  title: state.typeTrx == 'update'
+                      ? "Failed Update Event"
+                      : "Failed Delete Event",
+                  message: state.errorTrx!,
+                  color: Colors.red,
+                );
+
+                context.read<EventBloc>().add(ResetTrxStateRequested());
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _handledTrx = false;
+                });
+              }
             }
           },
           child: BlocBuilder<EventBloc, EventState>(
@@ -645,20 +662,58 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         children: [
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: _isUpdating ? null : _handleUpdate,
-                              icon: _isUpdating
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.save),
-                              label: Text(
-                                _isUpdating ? 'Updating...' : 'Update Event',
-                              ),
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  String? eventName;
+                                  String? eventLocation;
+                                  String? eventDateStart;
+                                  String? eventDateEnd;
+                                  String? description;
+                                  int? eventTypeId;
+                                  int? countParticipant;
+                                  int? statusId;
+                                  if (_eventController.text != data.eventName){
+                                    eventName = _eventController.text;
+                                  }
+                                  if (_lokasiController.text != data.eventLocation){
+                                    eventLocation = _lokasiController.text;
+                                  }
+                                  if (_tglMulai != data.eventDateStart){
+                                    eventDateStart = formatToDateTimeSql(_tglMulai!);
+                                  }
+                                  if (_tglSelesai != data.eventDateEnd){
+                                    eventDateEnd = formatToDateTimeSql(_tglSelesai!);
+                                  }
+                                  if (_deskripsiController.text != data.description){
+                                    description = _deskripsiController.text;
+                                    if (_deskripsiController.text.isEmpty){
+                                      description = '-';
+                                    }
+                                  }
+                                  if (_selectedEventTypeId != data.eventTypeId){
+                                    eventTypeId = _selectedEventTypeId;
+                                  }
+                                  if (int.parse(_jumlahPesertaController.text) != data.countParticipant){
+                                    countParticipant = int.parse(_jumlahPesertaController.text);
+                                  }
+                                  if (_selectedStatusId != data.statusId){
+                                    statusId = _selectedStatusId;
+                                  }
+                                  context.read<EventBloc>().add(UpdateEventRequested(
+                                    data.id, 
+                                    eventName,
+                                    eventLocation,
+                                    eventDateStart,
+                                    eventDateEnd,
+                                    description,
+                                    eventTypeId,
+                                    countParticipant,
+                                    statusId
+                                  ));
+                                }
+                              },
+                              icon: const Icon(Icons.save),
+                              label: Text('Update Event'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: CustomColors.oranges,
                                 foregroundColor: Colors.white,
@@ -672,7 +727,22 @@ class _EventDetailPageState extends State<EventDetailPage> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: OutlinedButton.icon(
-                              onPressed: _isUpdating ? null : _handleDelete,
+                              onPressed: () {
+                                CustomDialog.show(
+                                  context,
+                                  icon: Icons.delete,
+                                  iconColor: Colors.red,
+                                  title: "Konfirmasi Hapus Pengajuan Event",
+                                  message: "Apakah anda yakin menghapus data pengajuan ini?",
+                                  confirmText: "Ya, hapus",
+                                  confirmColor: Colors.red,
+                                  cancelText: "Batal",
+                                  cancelColor: Colors.black,
+                                  onConfirm: () {
+                                    context.read<EventBloc>().add(DeleteEventRequested(data.id));
+                                  },
+                                );
+                              },
                               icon: const Icon(Icons.delete),
                               label: const Text('Hapus Event'),
                               style: OutlinedButton.styleFrom(

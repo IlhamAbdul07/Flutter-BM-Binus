@@ -182,5 +182,114 @@ class EventBloc extends Bloc<EventEvent, EventState> {
       }
       emit(state.setLoadingTrx(false));
     });
+
+    on<UpdateEventRequested>((event, emit) async {
+      emit(state.setLoadingTrx(true));
+      try {
+        Map<String, dynamic> data = {};
+        if (event.eventName != null){
+          data['event_name'] = event.eventName;
+        }
+        if (event.eventLocation != null){
+          data['event_location'] = event.eventLocation;
+        }
+        if (event.eventDateStart != null){
+          data['event_date_start'] = event.eventDateStart;
+        }
+        if (event.eventDateEnd != null){
+          data['event_date_end'] = event.eventDateEnd;
+        }
+        if (event.description != null){
+          data['description'] = event.description;
+        }
+        if (event.eventTypeId != null){
+          data['event_type_id'] = event.eventTypeId;
+        }
+        if (event.countParticipant != null){
+          data['count_participant'] = event.countParticipant;
+        }
+        if (event.statusId != null){
+          data['status_id'] = event.statusId;
+        }
+        final response = await ApiService.handleRequest(method: 'PUT', requestId: event.requestId, data: data);
+
+        if (response != null && response['success'] == true) {
+          emit(state.copyWith(
+            isSuccessTrx: true,
+            errorTrx: null,
+            typeTrx: "update",
+          ));
+        } else {
+          if (response != null && response['data'] != null) {
+            final message = response['data']?['message'] ?? 'Terjadi kesalahan yang tidak diketahui';
+            emit(state.copyWith(
+              isSuccessTrx: false,
+              errorTrx: message,
+              typeTrx: null,
+            ));
+          } else {
+            emit(state.copyWith(
+              isSuccessTrx: false,
+              errorTrx: response?['message'] ?? 'Terjadi kesalahan yang tidak diketahui',
+              typeTrx: null,
+            ));
+          }
+        }
+      } catch (e) {
+        emit(state.copyWith(
+          isSuccessTrx: false,
+          errorTrx: '$e',
+          typeTrx: null,
+        ));
+      } finally {
+        emit(state.setLoadingTrx(false));
+      }
+    });
+
+    on<DeleteEventRequested>((event, emit) async {
+      emit(state.setLoadingTrx(true));
+      try {
+        final response = await ApiService.handleRequest(method: 'DELETE', requestId: event.reqId);
+
+        if (response != null && response['success'] == true) {
+          emit(state.copyWith(
+            isSuccessTrx: true,
+            errorTrx: null,
+            typeTrx: "delete",
+          ));
+        } else {
+          if (response != null && response['data'] != null) {
+            final message = response['data']?['message'] ?? 'Terjadi kesalahan yang tidak diketahui';
+            emit(state.copyWith(
+              isSuccessTrx: false,
+              errorTrx: message,
+              typeTrx: null,
+            ));
+          } else {
+            emit(state.copyWith(
+              isSuccessTrx: false,
+              errorTrx: response?['message'] ?? 'Terjadi kesalahan yang tidak diketahui',
+              typeTrx: null,
+            ));
+          }
+        }
+      } catch (e) {
+        emit(state.copyWith(
+          isSuccessTrx: false,
+          errorTrx: '$e',
+          typeTrx: null,
+        ));
+      } finally {
+        emit(state.setLoadingTrx(false));
+      }
+    });
+
+    on<ResetTrxStateRequested>((event, emit) {
+      emit(state.copyWith(
+        isSuccessTrx: false,
+        errorTrx: null,
+        typeTrx: null,
+      ));
+    });
   }
 }

@@ -80,3 +80,51 @@ class DownloadEventDetailRequested extends EventEvent {
   @override
   List<Object> get props => [reqId!];
 }
+
+class UpdateEventRequested extends EventEvent {
+  final int requestId;
+  final String? eventName;
+  final String? eventLocation;
+  final String? eventDateStart;
+  final String? eventDateEnd;
+  final String? description;
+  final int? eventTypeId;
+  final int? countParticipant;
+  final int? statusId;
+
+  const UpdateEventRequested(
+    this.requestId,
+    this.eventName, 
+    this.eventLocation, 
+    this.eventDateStart,
+    this.eventDateEnd,
+    this.description,
+    this.eventTypeId,
+    this.countParticipant,
+    this.statusId
+  );
+
+  @override
+  List<Object> get props => [
+    requestId,
+    eventName!, 
+    eventLocation!, 
+    eventDateStart!,
+    eventDateEnd!,
+    description!,
+    eventTypeId!,
+    countParticipant!,
+    statusId!
+  ];
+}
+
+class DeleteEventRequested extends EventEvent {
+  final int reqId;
+
+  const DeleteEventRequested(this.reqId);
+
+  @override
+  List<Object> get props => [reqId];
+}
+
+class ResetTrxStateRequested extends EventEvent {}
