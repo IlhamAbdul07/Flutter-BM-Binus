@@ -6,6 +6,8 @@ import 'package:bm_binus/presentation/bloc/event_type/event_type_bloc.dart';
 import 'package:bm_binus/presentation/bloc/event_type/event_type_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
+import 'package:bm_binus/presentation/bloc/status/status_bloc.dart';
+import 'package:bm_binus/presentation/bloc/status/status_event.dart';
 import 'package:bm_binus/presentation/bloc/user/user_bloc.dart';
 import 'package:bm_binus/presentation/layout/main_layout.dart';
 import 'package:bm_binus/presentation/pages/add_event_page.dart';
@@ -78,10 +80,20 @@ GoRouter createRouter(AuthBloc authBloc) {
               final requestId = state.extra as int;
 
               return MaterialPage(
-                child: BlocProvider(
-                  create: (_) => EventBloc()..add(LoadDetailEventRequested(requestId)),
+                child: MultiBlocProvider(
+                  providers: [
+                    BlocProvider<EventBloc>(
+                      create: (_) => EventBloc()..add(LoadDetailEventRequested(requestId))
+                    ),
+                    BlocProvider<EventTypeBloc>(
+                      create: (_) => EventTypeBloc()..add(LoadEventTypeEvent()),
+                    ),
+                    BlocProvider<StatusBloc>(
+                      create: (_) => StatusBloc()..add(LoadStatusEvent()),
+                    ),
+                  ], 
                   child: EventDetailPage(requestId: requestId),
-                ),
+                )
               );
             },
           ),

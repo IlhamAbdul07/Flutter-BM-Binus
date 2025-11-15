@@ -3,7 +3,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/presentation/bloc/event_type/event_type_bloc.dart';
-import 'package:bm_binus/presentation/bloc/event_type/event_type_event.dart';
 import 'package:bm_binus/presentation/bloc/event_type/event_type_state.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
@@ -105,7 +104,6 @@ class _AddEventPageState extends State<AddEventPage> {
   @override
   void initState() {
     super.initState();
-    context.read<EventTypeBloc>().add(LoadEventTypeEvent());
     final authState = context.read<AuthBloc>().state;
     setState(() {
       _userLogin.text = authState.name!;

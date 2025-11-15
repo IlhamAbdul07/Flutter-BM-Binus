@@ -417,6 +417,41 @@ class ApiService {
   }
 
 
+  // ============================== STATUS ============================== //
+  static Future<dynamic> handleStatus({
+    required String method,
+    int? statusId,
+    Map<String, dynamic>? data,
+    String? contentType = "application/json",
+    Map<String, String>? params,
+  }) async {
+    final token = StorageService.getToken();
+
+    String endpoint;
+    if (method == 'GET') {
+      endpoint = '/status${statusId != null ? "/$statusId" : ""}${params != null ? GeneralService.buildQueryParams(params) : ""}';
+    } else if (method == 'POST') {
+      endpoint = '/status';
+    } else if (method == 'PUT' && statusId != null) {
+      endpoint = '/status/$statusId';
+    } else if (method == 'DELETE' && statusId != null) {
+      endpoint = '/status/$statusId';
+    } else {
+      throw Exception('Parameter tidak lengkap untuk operasi $method');
+    }
+
+    final response = await apiRequest(
+      method: method,
+      endpoint: endpoint,
+      body: data,
+      token: token,
+      contentType: contentType!,
+    );
+
+    return response;
+  }
+
+
   // ============================== COMMENT ============================== //
   static Future<dynamic> handleComment({
     required String method,

@@ -1,13 +1,18 @@
 import 'package:bm_binus/core/constants/custom_colors.dart';
 import 'package:bm_binus/core/constants/ui_helpers.dart';
 import 'package:bm_binus/data/dummy/komentar_data.dart';
+import 'package:bm_binus/presentation/bloc/event_type/event_type_bloc.dart';
+import 'package:bm_binus/presentation/bloc/event_type/event_type_state.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_state.dart';
+import 'package:bm_binus/presentation/bloc/status/status_bloc.dart';
+import 'package:bm_binus/presentation/bloc/status/status_state.dart';
 import 'package:bm_binus/presentation/widgets/custom_dialog.dart';
 import 'package:bm_binus/presentation/widgets/custom_input_dialog.dart';
 import 'package:bm_binus/presentation/widgets/custom_snackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -24,21 +29,23 @@ class EventDetailPage extends StatefulWidget {
 
 class _EventDetailPageState extends State<EventDetailPage> {
   final _formKey = GlobalKey<FormState>();
-  final _komentarController = TextEditingController();
 
   late TextEditingController _staffController;
   late TextEditingController _eventController;
   late TextEditingController _lokasiController;
-  late TextEditingController _tglMulaiController;
-  late TextEditingController _tglSelesaiController;
-  late TextEditingController _eventTipeController;
-  late TextEditingController _statusController;
-
   late DateTime? _tglMulai;
   late DateTime? _tglSelesai;
+  late TextEditingController _tglMulaiController;
+  late TextEditingController _tglSelesaiController;
+  late TextEditingController _deskripsiController;
+  int? _selectedEventTypeId;
+  late TextEditingController _jumlahPesertaController;
+  int? _selectedStatusId;
+
   bool _isUpdating = false;
 
   late List<KomentarModel> _komentarList;
+  final _komentarController = TextEditingController();
 
   // Dummy file list
   final List<Map<String, String>> _uploadedFiles = [
@@ -52,28 +59,20 @@ class _EventDetailPageState extends State<EventDetailPage> {
     super.initState();
     _initializeControllers();
     _loadKomentar();
-
-    // Future.microtask(() {
-    //   context.read<EventBloc>().add(LoadDetailEventRequested(widget.requestId));
-    // });
   }
 
   void _initializeControllers() {
     _staffController = TextEditingController(text: '');
     _eventController = TextEditingController(text: '');
     _lokasiController = TextEditingController(text: '');
-    _eventTipeController = TextEditingController(text: '');
-    _statusController = TextEditingController(text: '');
-
     _tglMulai = null;
     _tglSelesai = null;
-
-    _tglMulaiController = TextEditingController(
-      text: "",
-    );
-    _tglSelesaiController = TextEditingController(
-      text: "",
-    );
+    _tglMulaiController = TextEditingController(text: '');
+    _tglSelesaiController = TextEditingController(text: '');
+    _deskripsiController = TextEditingController(text: '');
+    _selectedEventTypeId = null;
+    _jumlahPesertaController = TextEditingController(text: '');
+    _selectedStatusId = null;
   }
 
   void _loadKomentar() {
@@ -87,8 +86,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
     _lokasiController.dispose();
     _tglMulaiController.dispose();
     _tglSelesaiController.dispose();
-    _eventTipeController.dispose();
-    _statusController.dispose();
+    _deskripsiController.dispose();
+    _jumlahPesertaController.dispose();
     _komentarController.dispose();
     super.dispose();
   }
@@ -98,23 +97,79 @@ class _EventDetailPageState extends State<EventDetailPage> {
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    final DateTime? picked = await showDatePicker(
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: isStartDate ? _tglMulai : _tglSelesai,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
     );
 
-    if (picked != null) {
-      setState(() {
-        if (isStartDate) {
-          _tglMulai = picked;
-          _tglMulaiController.text = DateFormat('dd MMM yyyy').format(picked);
-        } else {
-          _tglSelesai = picked;
-          _tglSelesaiController.text = DateFormat('dd MMM yyyy').format(picked);
+    if (pickedDate != null) {
+      final pickedTime = await showTimePicker(
+        context: context, 
+        initialTime: TimeOfDay.now(),
+      );
+
+      if (pickedTime != null){
+        final fullDateTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute
+        );
+
+        if (isStartDate && _tglSelesai != null) {
+          if (fullDateTime.isAfter(_tglSelesai!)) {
+            CustomSnackBar.show(
+              context,
+              icon: Icons.error,
+              title: 'Failed',
+              message: 'Tanggal mulai harus lebih kecil dari tanggal selesai!',
+              color: Colors.red,
+            );
+            return;
+          }
         }
-      });
+
+        if (!isStartDate && _tglMulai != null) {
+          if (fullDateTime.isBefore(_tglMulai!)) {
+            CustomSnackBar.show(
+              context,
+              icon: Icons.error,
+              title: 'Failed',
+              message: 'Tanggal selesai harus lebih besar dari tanggal mulai!',
+              color: Colors.red,
+            );
+            return;
+          }
+        }
+
+        setState(() {
+          if (isStartDate) {
+            _tglMulai = fullDateTime;
+            _tglMulaiController.text = _formatDateTime(fullDateTime);
+          } else {
+            _tglSelesai = fullDateTime;
+            _tglSelesaiController.text = _formatDateTime(fullDateTime);
+          }
+        });
+      }
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Pengajuan':
+        return Colors.orange;
+      case 'Validasi':
+        return Colors.blue;
+      case 'Proses':
+        return Colors.purple;
+      case 'Finalisasi':
+        return Colors.teal;
+      default:
+        return Colors.green;
     }
   }
 
@@ -258,15 +313,14 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 _staffController.text = event.userName;
                 _eventController.text = event.eventName;
                 _lokasiController.text = event.eventLocation;
-                _eventTipeController.text = event.eventTypeName;
-                _statusController.text = event.statusName;
-      
                 _tglMulai = event.eventDateStart;
                 _tglSelesai = event.eventDateEnd;
-                _tglMulaiController.text =
-                    DateFormat('dd MMM yyyy').format(_tglMulai!);
-                _tglSelesaiController.text =
-                    DateFormat('dd MMM yyyy').format(_tglSelesai!);
+                _tglMulaiController.text = _formatDateTime(_tglMulai!);
+                _tglSelesaiController.text = _formatDateTime(_tglSelesai!);
+                _deskripsiController.text = event.description;
+                _selectedEventTypeId = event.eventTypeId;
+                _jumlahPesertaController.text = event.countParticipant.toString();
+                _selectedStatusId = event.statusId;
               });
             }
       
@@ -376,6 +430,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         controller: _staffController,
                         label: 'Nama Staf',
                         icon: Icons.person,
+                        readOnly: true,
                       ),
                       const SizedBox(height: 16),
               
@@ -383,6 +438,12 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         controller: _eventController,
                         label: 'Nama Event',
                         icon: Icons.event,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Nama event wajib diisi';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
               
@@ -390,9 +451,15 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         controller: _lokasiController,
                         label: 'Lokasi Event',
                         icon: Icons.location_on,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Lokasi event wajib diisi';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
-              
+
                       // Date Fields
                       Row(
                         children: [
@@ -414,18 +481,162 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-              
+
                       _buildTextField(
-                        controller: _eventTipeController,
-                        label: 'Tipe Event',
-                        icon: Icons.category,
+                        controller: _deskripsiController,
+                        label: 'Deskripsi',
+                        icon: Icons.description,
+                        maxLines: 4
                       ),
                       const SizedBox(height: 16),
               
+                      BlocBuilder<EventTypeBloc, EventTypeState>(
+                        builder: (context, state) {
+                          if (state.isLoading) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: LinearProgressIndicator(),
+                            );
+                          }
+
+                          if (state.errorFetch != null) {
+                            return Text(
+                              "Gagal memuat event type: ${state.errorFetch}",
+                              style: const TextStyle(color: Colors.red),
+                            );
+                          }
+
+                          final eventTypes = state.eventType;
+
+                          if (_selectedEventTypeId == null && eventTypes.isNotEmpty) {
+                            _selectedEventTypeId = eventTypes.first.id;
+                          }
+
+                          return DropdownButtonFormField<int>(
+                            initialValue: _selectedEventTypeId,
+                            decoration: InputDecoration(
+                              labelText: 'Jenis Event',
+                              prefixIcon: Icon(Icons.category),
+                              filled: true,
+                              labelStyle: TextStyle(color: Colors.black),
+                              fillColor: Colors.grey[50],
+                            ),
+                            items: eventTypes.map((et) {
+                              return DropdownMenuItem<int>(
+                                value: et.id,
+                                child: Text(et.name),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedEventTypeId = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return "Jenis event wajib dipilih";
+                              }
+                              return null;
+                            },
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
                       _buildTextField(
-                        controller: _statusController,
-                        label: 'Status',
-                        icon: Icons.flag,
+                        controller: _jumlahPesertaController,
+                        label: 'Jumlah Partisipan',
+                        icon: Icons.people,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Jumlah partisipan wajib diisi';
+                          }
+                          final participant = int.tryParse(value);
+                          if (participant == null) {
+                            return 'Jumlah partisipan harus berupa angka';
+                          }
+                          if (participant < 1) {
+                            return 'Jumlah partisipan minimal 1';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+              
+                      BlocBuilder<StatusBloc, StatusState>(
+                        builder: (context, state) {
+                          if (state.isLoading) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: LinearProgressIndicator(),
+                            );
+                          }
+
+                          if (state.errorFetch != null) {
+                            return Text(
+                              "Gagal memuat status: ${state.errorFetch}",
+                              style: const TextStyle(color: Colors.red),
+                            );
+                          }
+
+                          final status = state.status;
+
+                          if (_selectedStatusId == null && status.isNotEmpty) {
+                            _selectedStatusId = status.first.id;
+                          }
+
+                          return DropdownButtonFormField<int>(
+                            initialValue: _selectedStatusId,
+                            decoration: InputDecoration(
+                              labelText: 'Status',
+                              prefixIcon: Icon(Icons.flag),
+                              filled: true,
+                              labelStyle: TextStyle(color: Colors.black),
+                              fillColor: Colors.grey[50],
+                            ),
+                            items: status.map((et) {
+                              final color = _getStatusColor(et.name);
+                              return DropdownMenuItem<int>(
+                                value: et.id,
+                                child: Container(
+                                  constraints: const BoxConstraints(
+                                    minHeight: 30,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), // diperkecil
+                                  decoration: BoxDecoration(
+                                    color: color.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: color, width: 1),
+                                  ),
+                                  child: Text(
+                                    et.name,
+                                    style: TextStyle(
+                                      color: color,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedStatusId = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return "Status wajib dipilih";
+                              }
+                              return null;
+                            },
+                          );
+                        },
                       ),
                       const SizedBox(height: 24),
               
@@ -946,28 +1157,32 @@ class _EventDetailPageState extends State<EventDetailPage> {
     required TextEditingController controller,
     required String label,
     required IconData icon,
+    bool readOnly = false,
+    int maxLines = 1,
+    FormFieldValidator<String>? validator,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextFormField(
       controller: controller,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
         filled: true,
         fillColor: Colors.grey[50],
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return '$label tidak boleh kosong';
-        }
-        return null;
-      },
+      validator: validator,
+      maxLines: maxLines,
     );
   }
 
   Widget _buildDateField({
     required TextEditingController controller,
     required String label,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
     return TextFormField(
       controller: controller,
@@ -982,7 +1197,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
       onTap: onTap,
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return '$label tidak boleh kosong';
+          return '$label wajib diisi';
         }
         return null;
       },
@@ -999,18 +1214,24 @@ class DownloadButton extends StatelessWidget {
     return BlocBuilder<EventBloc, EventState>(
       builder: (context, eventState) {
         final isDownloading = eventState.isLoadingTrx;
-        return IconButton(
-          onPressed: () {
-            context.read<EventBloc>().add(DownloadEventDetailRequested(reqId));
-          },
-          icon: isDownloading
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green,),
-              )
-            : const Icon(Icons.download,color: Colors.green,),
-          tooltip: "Download Detail Pengajuan Event",
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.green, width: 1.5),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            onPressed: () {
+              context.read<EventBloc>().add(DownloadEventDetailRequested(reqId));
+            },
+            icon: isDownloading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green,),
+                )
+              : const Icon(Icons.download,color: Colors.green,),
+            tooltip: "Download Detail Pengajuan Event",
+          ),
         );
       },
     );
