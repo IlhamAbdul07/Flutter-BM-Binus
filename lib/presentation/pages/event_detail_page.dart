@@ -319,6 +319,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   color: Colors.green,
                 );
 
+                await Future.delayed(const Duration(seconds: 1));
+
                 if (state.typeTrx == "update") {
                   _refreshDetail();
                 } else if (state.typeTrx == "delete") {
@@ -713,7 +715,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                 }
                               },
                               icon: const Icon(Icons.save),
-                              label: Text('Update Event'),
+                              label: Text(state.loadingType["update"] == true ? 'Mohon tunggu...' : 'Update Event'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: CustomColors.oranges,
                                 foregroundColor: Colors.white,
@@ -744,7 +746,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                 );
                               },
                               icon: const Icon(Icons.delete),
-                              label: const Text('Hapus Event'),
+                              label: Text(state.loadingType["delete"] == true ? 'Mohon tunggu...' : 'Hapus Event'),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.red,
                                 side: const BorderSide(color: Colors.red),

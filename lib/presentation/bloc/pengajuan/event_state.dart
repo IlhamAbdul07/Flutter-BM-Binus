@@ -11,6 +11,7 @@ class EventState extends Equatable {
   final String? errorTrx;
   final String? typeTrx;
   final bool isLoadingTrx;
+  final Map<String, bool> loadingType;
 
   const EventState({
     this.events = const [],
@@ -20,7 +21,8 @@ class EventState extends Equatable {
     required this.isSuccessTrx,
     this.errorTrx,
     this.typeTrx,
-    this.isLoadingTrx = false
+    this.isLoadingTrx = false,
+    this.loadingType = const {}
   });
 
   factory EventState.initial() {
@@ -32,7 +34,8 @@ class EventState extends Equatable {
       isSuccessTrx: false,
       errorTrx: null,
       typeTrx: null,
-      isLoadingTrx: false
+      isLoadingTrx: false,
+      loadingType: {}
     );
   }
 
@@ -64,6 +67,12 @@ class EventState extends Equatable {
     );
   }
 
+  EventState setLoadingType(String key, bool value) {
+    final newMap = Map<String, bool>.from(loadingType);
+    newMap[key] = value;
+    return copyWith(loadingType: newMap);
+  }
+
   EventState copyWith({
     List<EventModel>? events,
     EventDetailModel? singleEvent,
@@ -73,6 +82,7 @@ class EventState extends Equatable {
     String? errorTrx,
     String? typeTrx,
     bool? isLoadingTrx,
+    Map<String, bool>? loadingType,
   }) {
     return EventState(
       events: events ?? this.events,
@@ -83,9 +93,10 @@ class EventState extends Equatable {
       errorTrx: errorTrx,
       typeTrx: typeTrx,
       isLoadingTrx: isLoadingTrx ?? this.isLoadingTrx,
+      loadingType: loadingType ?? this.loadingType,
     );
   }
 
   @override
-  List<Object?> get props => [events, singleEvent, isLoading, errorFetch, isSuccessTrx, errorTrx, typeTrx, isLoadingTrx];
+  List<Object?> get props => [events, singleEvent, isLoading, errorFetch, isSuccessTrx, errorTrx, typeTrx, isLoadingTrx, loadingType];
 }

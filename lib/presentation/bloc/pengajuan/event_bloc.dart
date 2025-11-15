@@ -184,7 +184,7 @@ class EventBloc extends Bloc<EventEvent, EventState> {
     });
 
     on<UpdateEventRequested>((event, emit) async {
-      emit(state.setLoadingTrx(true));
+      emit(state.setLoadingType("update", true));
       try {
         Map<String, dynamic> data = {};
         if (event.eventName != null){
@@ -242,12 +242,12 @@ class EventBloc extends Bloc<EventEvent, EventState> {
           typeTrx: null,
         ));
       } finally {
-        emit(state.setLoadingTrx(false));
+        emit(state.setLoadingType("update", false));
       }
     });
 
     on<DeleteEventRequested>((event, emit) async {
-      emit(state.setLoadingTrx(true));
+      emit(state.setLoadingType("delete", true));
       try {
         final response = await ApiService.handleRequest(method: 'DELETE', requestId: event.reqId);
 
@@ -280,7 +280,7 @@ class EventBloc extends Bloc<EventEvent, EventState> {
           typeTrx: null,
         ));
       } finally {
-        emit(state.setLoadingTrx(false));
+        emit(state.setLoadingType("delete", false));
       }
     });
 
@@ -289,6 +289,7 @@ class EventBloc extends Bloc<EventEvent, EventState> {
         isSuccessTrx: false,
         errorTrx: null,
         typeTrx: null,
+        loadingType: {},
       ));
     });
   }
