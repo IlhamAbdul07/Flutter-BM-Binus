@@ -1,8 +1,8 @@
 import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
-import 'package:bm_binus/presentation/bloc/pengajuan/priority_bloc.dart';
-import 'package:bm_binus/presentation/bloc/pengajuan/priority_event.dart';
+import 'package:bm_binus/presentation/bloc/priority/priority_bloc.dart';
+import 'package:bm_binus/presentation/bloc/priority/priority_event.dart';
 import 'package:bm_binus/presentation/cubit/ui_cubit.dart';
 import 'package:bm_binus/presentation/routes/app_router.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';

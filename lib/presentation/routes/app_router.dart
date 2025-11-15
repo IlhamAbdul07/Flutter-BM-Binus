@@ -2,8 +2,12 @@ import 'dart:async';
 
 import 'package:bm_binus/data/models/event_type_model.dart';
 import 'package:bm_binus/data/models/users_model.dart';
+import 'package:bm_binus/presentation/bloc/comment/comment_bloc.dart';
+import 'package:bm_binus/presentation/bloc/comment/comment_event.dart';
 import 'package:bm_binus/presentation/bloc/event_type/event_type_bloc.dart';
 import 'package:bm_binus/presentation/bloc/event_type/event_type_event.dart';
+import 'package:bm_binus/presentation/bloc/file/file_bloc.dart';
+import 'package:bm_binus/presentation/bloc/file/file_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
 import 'package:bm_binus/presentation/bloc/status/status_bloc.dart';
@@ -90,6 +94,12 @@ GoRouter createRouter(AuthBloc authBloc) {
                     ),
                     BlocProvider<StatusBloc>(
                       create: (_) => StatusBloc()..add(LoadStatusEvent()),
+                    ),
+                    BlocProvider<FileBloc>(
+                      create: (_) => FileBloc()..add(LoadFileEvent(requestId)),
+                    ),
+                    BlocProvider<CommentBloc>(
+                      create: (_) => CommentBloc()..add(LoadCommentEvent(requestId)),
                     ),
                   ], 
                   child: EventDetailPage(requestId: requestId),
