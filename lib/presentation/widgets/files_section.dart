@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class FilesSection extends StatefulWidget {
   final int requestId;
@@ -21,7 +22,6 @@ class FilesSection extends StatefulWidget {
 class _FilesSectionState extends State<FilesSection> {
   List<Map<String, String>> _uploadedFiles = [];
 
-  // 📌 Fungsi Upload File
   Future<void> _handleUploadFile() async {
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
@@ -122,7 +122,9 @@ class _FilesSectionState extends State<FilesSection> {
               .map((f) => {
                     'id': f.id.toString(),
                     'name': f.fileName,
-                    'extension': f.fileExt,
+                    'ext': f.fileExt,
+                    'content': f.fileContent,
+                    'view': f.fileView,
                   })
               .toList();
         }
@@ -160,7 +162,7 @@ class _FilesSectionState extends State<FilesSection> {
                 const Icon(Icons.attach_file, color: Colors.deepPurple),
                 const SizedBox(width: 8),
                 const Text(
-                  'File Lampiran',
+                  'Lampiran',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: 8),
@@ -219,7 +221,9 @@ class _FilesSectionState extends State<FilesSection> {
                 return _buildFileCard(
                   fileId: int.parse(file['id']!),
                   fileName: file['name']!,
-                  extension: file['extension']!,
+                  fileExt: file['ext']!,
+                  fileContent: file['content']!,
+                  fileView: file['view']!,
                 );
               }).toList(),
             ),
@@ -232,17 +236,20 @@ class _FilesSectionState extends State<FilesSection> {
   Widget _buildFileCard({
     required int fileId,
     required String fileName,
-    required String extension,
+    required String fileExt,
+    required String fileContent,
+    required String fileView,
   }) {
-    final fileColor = UIHelpers.getFileColor(extension);
-    final fileIcon = UIHelpers.getFileIcon(extension);
+    final fileColor = UIHelpers.getFileColor(fileExt);
+    final fileIcon = UIHelpers.getFileIcon(fileExt);
+
+    final isImage = ['jpg', 'jpeg', 'png', 'gif'].contains(fileExt.toLowerCase());
 
     return Container(
-      width: 160, // <----- UBAH LEBAR CARD DI SINI (default tadi 140)
-      // bisa coba 160 / 170 / 180 sampai pas
+      width: 160,
       margin: const EdgeInsets.only(right: 12),
       child: Card(
-        clipBehavior: Clip.hardEdge, // <— penting biar tdk overflow
+        clipBehavior: Clip.hardEdge,
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -251,7 +258,7 @@ class _FilesSectionState extends State<FilesSection> {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: SizedBox(
-            height: 100, // <--- TAMBAH SEDIKIT HEIGHT (boleh tweak)
+            height: 130, // tambahkan dikit untuk space tombol
             child: Stack(
               children: [
                 // DELETE BUTTON
@@ -304,7 +311,7 @@ class _FilesSectionState extends State<FilesSection> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              extension,
+                              fileExt,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -318,11 +325,56 @@ class _FilesSectionState extends State<FilesSection> {
                       Text(
                         fileName,
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis, // <--- PEMOTONG NAMA OTOMATIS
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      // =========================
+                      // ROW BUTTON DOWNLOAD/PREVIEW
+                      // =========================
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Download button
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(Icons.download, size: 18, color: Colors.blue),
+                            onPressed: () async {
+                              final url = Uri.parse(fileContent); // misal https://drive.google.com/uc?id=...&export=download
+                              if (await canLaunchUrl(url)) {
+                                await launchUrl(url, mode: LaunchMode.platformDefault); // <-- gunakan platformDefault untuk Web
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Tidak bisa membuka link download')),
+                                );
+                              }
+                            },
+                          ),
+
+                          // Preview button (only for image)
+                          if (isImage)
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: const Icon(Icons.remove_red_eye, size: 18, color: Colors.green),
+                              onPressed: () async {
+                                final url = Uri.parse(fileView); // misal https://lh3.googleusercontent.com/d/fileId
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(url, mode: LaunchMode.platformDefault); // <-- untuk Web juga
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Tidak bisa membuka preview')),
+                                  );
+                                }
+                              },
+                            ),
+                        ],
                       ),
                     ],
                   ),
