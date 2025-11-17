@@ -30,10 +30,36 @@ class _FilesSectionState extends State<FilesSection> {
 
     if (result == null) return;
 
+    const approvedExt = {
+      // image
+      ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp", ".svg",
+      // document
+      ".txt", ".pdf", ".csv", ".docx", ".xlsx", ".pptx",
+      // data
+      ".json", ".xml", ".yml", ".yaml", ".ini", ".log",
+      // media
+      ".mp3", ".wav", ".ogg", ".flac", ".mp4", ".avi", ".mkv", ".webm",
+    };
+
     List<http.MultipartFile> multipartFiles = [];
 
     for (var file in result.files) {
       if (file.bytes == null) continue;
+
+      final ext = file.extension != null
+        ? ".${file.extension!.toLowerCase()}"
+        : "";
+
+      if (!approvedExt.contains(ext)) {
+        CustomSnackBar.show(
+          context,
+          icon: Icons.error,
+          title: 'Format Tidak Didukung',
+          message: 'File "${file.name}" dengan format $ext tidak diizinkan.',
+          color: Colors.red,
+        );
+        return;
+      }
 
       multipartFiles.add(
         http.MultipartFile.fromBytes(
@@ -88,7 +114,7 @@ class _FilesSectionState extends State<FilesSection> {
               context,
               icon: Icons.check_circle,
               title: "File Berhasil Diupload",
-              message: "File berhasil diunggah ke pengajuan.",
+              message: "File berhasil diunggah ke pengajuan event.",
               color: Colors.green,
             );
           } else if (state.typeTrx == "delete") {
@@ -96,7 +122,7 @@ class _FilesSectionState extends State<FilesSection> {
               context,
               icon: Icons.check_circle,
               title: "File Berhasil Dihapus",
-              message: "File berhasil dihapus dari pengajuan.",
+              message: "File berhasil dihapus dari pengajuan event.",
               color: Colors.green,
             );
           }
@@ -114,6 +140,8 @@ class _FilesSectionState extends State<FilesSection> {
             message: state.errorTrx!,
             color: Colors.red,
           );
+
+          context.read<FileBloc>().add(ResetFileTrx());
         }
 
         // UPDATE UI FILE LIST
@@ -136,7 +164,7 @@ class _FilesSectionState extends State<FilesSection> {
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Center(
               child: Text(
-                '⏳ Memuat file...',
+                '⏳ Memuat lampiran...',
                 style: TextStyle(fontSize: 13, color: Colors.black),
               ),
             ),
@@ -163,7 +191,7 @@ class _FilesSectionState extends State<FilesSection> {
                 const SizedBox(width: 8),
                 const Text(
                   'Lampiran',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: 8),
                 Container(
@@ -185,16 +213,20 @@ class _FilesSectionState extends State<FilesSection> {
             ),
 
             // BUTTON UPLOAD
-            OutlinedButton.icon(
-              onPressed: _handleUploadFile,
-              icon: const Icon(Icons.upload_file, size: 18),
-              label: const Text('Upload'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.deepPurple,
-                side: BorderSide(color: Colors.deepPurple.shade300),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            SizedBox(
+              height: 30,
+              width: 130,
+              child: OutlinedButton.icon(
+                onPressed: _handleUploadFile,
+                icon: const Icon(Icons.upload_file, size: 22),
+                label: const Text('Unggah', style: TextStyle(fontSize: 14),),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.deepPurple,
+                  side: BorderSide(color: Colors.deepPurple.shade300),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),
@@ -205,13 +237,20 @@ class _FilesSectionState extends State<FilesSection> {
 
         // FILE LIST
         if (_uploadedFiles.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Center(
-                child: Text(
-              "Belum ada file",
-              style: TextStyle(color: Colors.grey.shade600),
-            )),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                children: [
+                  Icon(Icons.attach_file_outlined, size: 64, color: Colors.grey.shade300),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Belum ada lampiran',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
           )
         else
           SingleChildScrollView(
@@ -232,7 +271,7 @@ class _FilesSectionState extends State<FilesSection> {
     );
   }
 
-  // 📌 FILE CARD
+  // 📌 FILE CARD (UI DITINGKATKAN)
   Widget _buildFileCard({
     required int fileId,
     required String fileName,
@@ -246,140 +285,163 @@ class _FilesSectionState extends State<FilesSection> {
     final isImage = ['jpg', 'jpeg', 'png', 'gif'].contains(fileExt.toLowerCase());
 
     return Container(
-      width: 160,
+      width: 165,
       margin: const EdgeInsets.only(right: 12),
       child: Card(
-        clipBehavior: Clip.hardEdge,
-        elevation: 2,
+        elevation: 3,
+        shadowColor: fileColor.withOpacity(0.25),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: fileColor.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: fileColor.withOpacity(0.15)),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SizedBox(
-            height: 130, // tambahkan dikit untuk space tombol
-            child: Stack(
-              children: [
-                // DELETE BUTTON
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.close, size: 14, color: Colors.black),
-                    onPressed: () {
-                      CustomDialog.show(
-                        context,
-                        icon: Icons.delete,
-                        iconColor: Colors.red,
-                        title: "Konfirmasi Hapus File",
-                        message: "Apakah anda yakin menghapus file ini?",
-                        confirmText: "Ya, hapus",
-                        confirmColor: Colors.red,
-                        cancelText: "Batal",
-                        cancelColor: Colors.black,
-                        onConfirm: () {
-                          context.read<FileBloc>().add(DeleteFileRequested(fileId));
-                        },
-                      );
-                    },
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                fileColor.withOpacity(0.06),
+                Colors.white,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: SizedBox(
+              height: 135,
+              child: Stack(
+                children: [
+                  // DELETE BUTTON (lebih halus dan elegan)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      splashRadius: 18,
+                      icon: Icon(
+                        Icons.close_rounded,
+                        size: 16,
+                        color: Colors.black.withOpacity(0.55),
+                      ),
+                      onPressed: () {
+                        CustomDialog.show(
+                          context,
+                          icon: Icons.delete,
+                          iconColor: Colors.red,
+                          title: "Konfirmasi Hapus File",
+                          message: "Apakah anda yakin menghapus file ini?",
+                          confirmText: "Ya, hapus",
+                          confirmColor: Colors.red,
+                          cancelText: "Batal",
+                          cancelColor: Colors.black,
+                          onConfirm: () {
+                            context.read<FileBloc>().add(DeleteFileRequested(fileId));
+                          },
+                        );
+                      },
+                    ),
                   ),
-                ),
 
-                // FILE CONTENT
-                Positioned.fill(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: fileColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
+                  // FILE CONTENT
+                  Positioned.fill(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 22),
+
+                        // FILE ICON + EXT BADGE
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: fileColor.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(fileIcon, color: fileColor, size: 26),
                             ),
-                            child: Icon(fileIcon, color: fileColor, size: 24),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: fileColor,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              fileExt,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: fileColor,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                fileExt.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        fileName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          ],
                         ),
-                      ),
 
-                      const SizedBox(height: 6),
+                        const SizedBox(height: 10),
 
-                      // =========================
-                      // ROW BUTTON DOWNLOAD/PREVIEW
-                      // =========================
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Download button
-                          IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(Icons.download, size: 18, color: Colors.blue),
-                            onPressed: () async {
-                              final url = Uri.parse(fileContent); // misal https://drive.google.com/uc?id=...&export=download
-                              if (await canLaunchUrl(url)) {
-                                await launchUrl(url, mode: LaunchMode.platformDefault); // <-- gunakan platformDefault untuk Web
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Tidak bisa membuka link download')),
-                                );
-                              }
-                            },
+                        // FILE NAME
+                        Text(
+                          fileName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
                           ),
+                        ),
 
-                          // Preview button (only for image)
-                          if (isImage)
+                        const Spacer(),
+
+                        // DOWNLOAD + PREVIEW BUTTONS (lebih rapi)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
                             IconButton(
                               padding: EdgeInsets.zero,
+                              splashRadius: 18,
                               constraints: const BoxConstraints(),
-                              icon: const Icon(Icons.remove_red_eye, size: 18, color: Colors.green),
+                              icon: const Icon(Icons.download_rounded, size: 20, color: Colors.blue),
                               onPressed: () async {
-                                final url = Uri.parse(fileView); // misal https://lh3.googleusercontent.com/d/fileId
+                                final url = Uri.parse(fileContent);
                                 if (await canLaunchUrl(url)) {
-                                  await launchUrl(url, mode: LaunchMode.platformDefault); // <-- untuk Web juga
+                                  await launchUrl(url, mode: LaunchMode.platformDefault);
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Tidak bisa membuka preview')),
+                                    const SnackBar(content: Text('Tidak bisa membuka link download')),
                                   );
                                 }
                               },
                             ),
-                        ],
-                      ),
-                    ],
+
+                            SizedBox(width: 5,),
+
+                            if (isImage)
+                              IconButton(
+                                padding: EdgeInsets.zero,
+                                splashRadius: 18,
+                                constraints: const BoxConstraints(),
+                                icon: const Icon(Icons.visibility_rounded, size: 20, color: Colors.green),
+                                onPressed: () async {
+                                  final url = Uri.parse(fileView);
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url, mode: LaunchMode.platformDefault);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Tidak bisa membuka preview')),
+                                    );
+                                  }
+                                },
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

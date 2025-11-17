@@ -83,6 +83,8 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
             typeTrx: null,
           ),
         );
+      } finally {
+        emit(state.setLoading(false));
       }
     });
 
@@ -130,6 +132,8 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
             typeTrx: null,
           ),
         );
+      } finally {
+        emit(state.setLoading(false));
       }
     });
 
@@ -173,6 +177,8 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
             typeTrx: null,
           ),
         );
+      } finally {
+        emit(state.setLoading(false));
       }
     });
 
@@ -181,6 +187,7 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
         isSuccessTrx: false,
         errorTrx: null,
         typeTrx: null,
+        isLoading: false
       ));
     });
   }

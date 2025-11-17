@@ -1,3 +1,4 @@
+import 'package:bm_binus/core/constants/ui_helpers.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
@@ -12,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path/path.dart' as p;
 
 class AddEventPage extends StatefulWidget {
   const AddEventPage({super.key});
@@ -74,11 +76,40 @@ class _AddEventPageState extends State<AddEventPage> {
     );
 
     if (result != null) {
+      // daftar ekstensi valid
+      const approvedExt = {
+        // image
+        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp", ".svg",
+        // document
+        ".txt", ".pdf", ".csv", ".docx", ".xlsx", ".pptx",
+        // data
+        ".json", ".xml", ".yml", ".yaml", ".ini", ".log",
+        // media
+        ".mp3", ".wav", ".ogg", ".flac", ".mp4", ".avi", ".mkv", ".webm",
+      };
+
       for (var file in result.files) {
         final bytes = file.bytes;
         final name = file.name;
 
         if (bytes != null) {
+          // ambil ekstensi file
+          final ext = file.extension != null
+              ? ".${file.extension!.toLowerCase()}"
+              : "";
+
+          // validasi ekstensi
+          if (!approvedExt.contains(ext)) {
+            CustomSnackBar.show(
+              context,
+              icon: Icons.error,
+              title: "Format Tidak Didukung",
+              message: "File \"$name\" dengan format $ext tidak diizinkan.",
+              color: Colors.red,
+            );
+            continue; // skip file ini, lanjut file berikutnya
+          }
+
           final multipart = http.MultipartFile.fromBytes(
             'files',
             bytes,
@@ -543,6 +574,8 @@ class _AddEventPageState extends State<AddEventPage> {
                             ..._fileNames.asMap().entries.map((entry) {
                               final index = entry.key;
                               final name = entry.value;
+                              final fileColor = UIHelpers.getFileColor(p.extension(name).replaceAll('.', ''));
+                              final fileIcon = UIHelpers.getFileIcon(p.extension(name).replaceAll('.', ''));
 
                               return Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -557,10 +590,10 @@ class _AddEventPageState extends State<AddEventPage> {
                                     Container(
                                       padding: const EdgeInsets.all(6),
                                       decoration: BoxDecoration(
-                                        color: Colors.orange.withOpacity(0.1),
+                                        color: fileColor.withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: const Icon(Icons.insert_drive_file, size: 20, color: Colors.orange),
+                                      child: Icon(fileIcon, size: 20, color: fileColor),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(

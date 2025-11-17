@@ -90,9 +90,28 @@ PreferredSizeWidget buildAppBarDesktop(BuildContext context) {
       spacing: 10,
       children: [
         Image.asset('assets/images/logo.png', height: 40),
-        const Text(
-          'Building Management',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        Row(
+          children: [
+            const Text(
+              'Building Management',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Transform.translate(
+              offset: Offset(0, 3),
+              child: Text(
+                'by Anggelia Wijayanti',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     ),
@@ -195,9 +214,28 @@ PreferredSizeWidget buildAppBarMobile(BuildContext context) {
       spacing: 10,
       children: [
         Image.asset('assets/images/logo.png', height: 40),
-        const Text(
-          'Building Management',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        Row(
+          children: [
+            const Text(
+              'Building Management',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Transform.translate(
+              offset: Offset(0, 3),
+              child: Text(
+                'by Anggelia Wijayanti',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     ),

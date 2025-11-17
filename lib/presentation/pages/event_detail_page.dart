@@ -1,4 +1,5 @@
 import 'package:bm_binus/core/constants/custom_colors.dart';
+import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bm_binus/presentation/bloc/event_type/event_type_bloc.dart';
 import 'package:bm_binus/presentation/bloc/event_type/event_type_state.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
@@ -26,7 +27,7 @@ class EventDetailPage extends StatefulWidget {
 
 class _EventDetailPageState extends State<EventDetailPage> {
   final _formKey = GlobalKey<FormState>();
-
+  int? userIdLogin;
   late TextEditingController _staffController;
   late TextEditingController _eventController;
   late TextEditingController _lokasiController;
@@ -44,6 +45,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
   void initState() {
     super.initState();
     _initializeControllers();
+    final authState = context.read<AuthBloc>().state;
+    userIdLogin = authState.id;
   }
 
   void _initializeControllers() {
@@ -719,7 +722,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                       const SizedBox(height: 24),
               
                       // 💬 SECTION KOMENTAR
-                      CommentSection(requestId: data.id),
+                      CommentSection(requestId: data.id, userId: userIdLogin!,),
                     ],
                   ),
                 ),

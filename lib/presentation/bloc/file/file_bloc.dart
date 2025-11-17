@@ -80,6 +80,8 @@ class FileBloc extends Bloc<FileEvent, FileState> {
             typeTrx: null,
           ),
         );
+      } finally {
+        emit(state.setLoading(false));
       }
     });
 
@@ -125,6 +127,8 @@ class FileBloc extends Bloc<FileEvent, FileState> {
             typeTrx: null,
           ),
         );
+      } finally {
+        emit(state.setLoading(false));
       }
     });
 
@@ -163,6 +167,8 @@ class FileBloc extends Bloc<FileEvent, FileState> {
             typeTrx: null,
           ),
         );
+      } finally {
+        emit(state.setLoading(false));
       }
     });
 
@@ -171,6 +177,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
         isSuccessTrx: false,
         errorTrx: null,
         typeTrx: null,
+        isLoading: false
       ));
     });
   }

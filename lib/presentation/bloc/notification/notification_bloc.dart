@@ -99,10 +99,12 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     if (title == null) return NotificationType.info;
 
     final lower = title.toLowerCase();
-    if (lower.contains("berkas")) {
-      return NotificationType.file;
-    } else if (lower.contains("komentar")) {
+    if (lower.contains("komentar")) {
       return NotificationType.comment;
+    } else if (lower.contains("berkas baru")) {
+      return NotificationType.file;
+    } else if (lower.contains("berkas dihapus")) {
+      return NotificationType.delete;
     } else if (lower.contains("event baru")) {
       return NotificationType.event;
     } else if (lower.contains("event diperbarui")) {

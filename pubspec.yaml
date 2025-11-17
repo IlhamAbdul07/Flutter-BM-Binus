@@ -49,6 +49,7 @@ dependencies:
   audioplayers: ^6.5.1
   file_picker: ^10.3.6
   url_launcher: ^6.3.2
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

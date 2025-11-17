@@ -218,6 +218,14 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 30),
+                    const Text(
+                      '© 2025 Building Management • by Anggelia Wijayanti',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -376,6 +384,14 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                const Text(
+                  '© 2025 Building Management • by Anggelia Wijayanti',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
                   ),
                 ),
               ],
