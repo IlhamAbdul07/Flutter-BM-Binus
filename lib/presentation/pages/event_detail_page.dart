@@ -28,6 +28,7 @@ class EventDetailPage extends StatefulWidget {
 class _EventDetailPageState extends State<EventDetailPage> {
   final _formKey = GlobalKey<FormState>();
   int? userIdLogin;
+  String? userRoleLogin;
   late TextEditingController _staffController;
   late TextEditingController _eventController;
   late TextEditingController _lokasiController;
@@ -47,6 +48,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
     _initializeControllers();
     final authState = context.read<AuthBloc>().state;
     userIdLogin = authState.id;
+    userRoleLogin = authState.roleName;
   }
 
   void _initializeControllers() {
@@ -319,6 +321,21 @@ class _EventDetailPageState extends State<EventDetailPage> {
               }
       
               final data = state.singleEvent!;
+
+              final bool isAvailable = (() {
+                switch (userRoleLogin) {
+                  case 'Staf Binus':
+                    return ![2, 3, 4, 5].contains(data.statusId);
+                  case 'Building Management':
+                    return true;
+                  case 'Admin ISS':
+                    return false;
+                  default:
+                    return true;
+                }
+              })();
+
+              final bool canEditStatus = userRoleLogin == "Building Management";
       
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
@@ -393,13 +410,13 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         ),
                       ),
                       const SizedBox(height: 24),
-              
-                      // Form Fields
+                      
                       _buildTextField(
                         controller: _staffController,
                         label: 'Nama Staf',
                         icon: Icons.person,
                         readOnly: true,
+                        enabled: false,
                       ),
                       const SizedBox(height: 16),
               
@@ -407,6 +424,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         controller: _eventController,
                         label: 'Nama Event',
                         icon: Icons.event,
+                        readOnly: !isAvailable,
+                        enabled: isAvailable,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Nama event wajib diisi';
@@ -420,6 +439,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         controller: _lokasiController,
                         label: 'Lokasi Event',
                         icon: Icons.location_on,
+                        readOnly: !isAvailable,
+                        enabled: isAvailable,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Lokasi event wajib diisi';
@@ -436,7 +457,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                             child: _buildDateField(
                               controller: _tglMulaiController,
                               label: 'Tanggal Mulai',
-                              onTap: () => _selectDate(context, true),
+                              onTap: isAvailable ? () => _selectDate(context, true) : null,
+                              enabled: isAvailable,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -444,7 +466,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                             child: _buildDateField(
                               controller: _tglSelesaiController,
                               label: 'Tanggal Selesai',
-                              onTap: () => _selectDate(context, false),
+                              onTap: isAvailable ? () => _selectDate(context, false) : null,
+                              enabled: isAvailable,
                             ),
                           ),
                         ],
@@ -455,7 +478,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         controller: _deskripsiController,
                         label: 'Deskripsi',
                         icon: Icons.description,
-                        maxLines: 4
+                        maxLines: 4,
+                        readOnly: !isAvailable,
+                        enabled: isAvailable
                       ),
                       const SizedBox(height: 16),
               
@@ -488,19 +513,32 @@ class _EventDetailPageState extends State<EventDetailPage> {
                               prefixIcon: Icon(Icons.category),
                               filled: true,
                               labelStyle: TextStyle(color: Colors.black),
-                              fillColor: Colors.grey[50],
+                              fillColor: isAvailable ? Colors.grey[50] : Colors.grey[300],
                             ),
                             items: eventTypes.map((et) {
                               return DropdownMenuItem<int>(
                                 value: et.id,
+                                enabled: isAvailable,
                                 child: Text(et.name),
                               );
                             }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedEventTypeId = value;
-                              });
+                            selectedItemBuilder: (context) {
+                              return eventTypes.map((et) {
+                                return Text(
+                                  et.name,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                  ),
+                                );
+                              }).toList();
                             },
+                            onChanged: isAvailable
+                              ? (value) {
+                                  setState(() {
+                                    _selectedEventTypeId = value;
+                                  });
+                                }
+                              : null,
                             validator: (value) {
                               if (value == null) {
                                 return "Jenis event wajib dipilih";
@@ -516,6 +554,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         controller: _jumlahPesertaController,
                         label: 'Jumlah Partisipan',
                         icon: Icons.people,
+                        readOnly: !isAvailable,
+                        enabled: isAvailable,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
@@ -565,12 +605,13 @@ class _EventDetailPageState extends State<EventDetailPage> {
                               prefixIcon: Icon(Icons.flag),
                               filled: true,
                               labelStyle: TextStyle(color: Colors.black),
-                              fillColor: Colors.grey[50],
+                              fillColor: isAvailable ? Colors.grey[50] : Colors.grey[300],
                             ),
                             items: status.map((et) {
                               final color = _getStatusColor(et.name);
                               return DropdownMenuItem<int>(
                                 value: et.id,
+                                enabled: canEditStatus,
                                 child: Container(
                                   constraints: const BoxConstraints(
                                     minHeight: 30,
@@ -593,11 +634,13 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                 ),
                               );
                             }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedStatusId = value;
-                              });
-                            },
+                            onChanged: canEditStatus
+                              ? (value) {
+                                  setState(() {
+                                    _selectedStatusId = value;
+                                  });
+                                }
+                              : null,
                             validator: (value) {
                               if (value == null) {
                                 return "Status wajib dipilih";
@@ -610,105 +653,107 @@ class _EventDetailPageState extends State<EventDetailPage> {
                       const SizedBox(height: 24),
               
                       // Action Buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  String? eventName;
-                                  String? eventLocation;
-                                  String? eventDateStart;
-                                  String? eventDateEnd;
-                                  String? description;
-                                  int? eventTypeId;
-                                  int? countParticipant;
-                                  int? statusId;
-                                  if (_eventController.text != data.eventName){
-                                    eventName = _eventController.text;
-                                  }
-                                  if (_lokasiController.text != data.eventLocation){
-                                    eventLocation = _lokasiController.text;
-                                  }
-                                  if (_tglMulai != data.eventDateStart){
-                                    eventDateStart = formatToDateTimeSql(_tglMulai!);
-                                  }
-                                  if (_tglSelesai != data.eventDateEnd){
-                                    eventDateEnd = formatToDateTimeSql(_tglSelesai!);
-                                  }
-                                  if (_deskripsiController.text != data.description){
-                                    description = _deskripsiController.text;
-                                    if (_deskripsiController.text.isEmpty){
-                                      description = '-';
+                      if (isAvailable)...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    String? eventName;
+                                    String? eventLocation;
+                                    String? eventDateStart;
+                                    String? eventDateEnd;
+                                    String? description;
+                                    int? eventTypeId;
+                                    int? countParticipant;
+                                    int? statusId;
+                                    if (_eventController.text != data.eventName){
+                                      eventName = _eventController.text;
                                     }
+                                    if (_lokasiController.text != data.eventLocation){
+                                      eventLocation = _lokasiController.text;
+                                    }
+                                    if (_tglMulai != data.eventDateStart){
+                                      eventDateStart = formatToDateTimeSql(_tglMulai!);
+                                    }
+                                    if (_tglSelesai != data.eventDateEnd){
+                                      eventDateEnd = formatToDateTimeSql(_tglSelesai!);
+                                    }
+                                    if (_deskripsiController.text != data.description){
+                                      description = _deskripsiController.text;
+                                      if (_deskripsiController.text.isEmpty){
+                                        description = '-';
+                                      }
+                                    }
+                                    if (_selectedEventTypeId != data.eventTypeId){
+                                      eventTypeId = _selectedEventTypeId;
+                                    }
+                                    if (int.parse(_jumlahPesertaController.text) != data.countParticipant){
+                                      countParticipant = int.parse(_jumlahPesertaController.text);
+                                    }
+                                    if (_selectedStatusId != data.statusId){
+                                      statusId = _selectedStatusId;
+                                    }
+                                    context.read<EventBloc>().add(UpdateEventRequested(
+                                      data.id, 
+                                      eventName,
+                                      eventLocation,
+                                      eventDateStart,
+                                      eventDateEnd,
+                                      description,
+                                      eventTypeId,
+                                      countParticipant,
+                                      statusId
+                                    ));
                                   }
-                                  if (_selectedEventTypeId != data.eventTypeId){
-                                    eventTypeId = _selectedEventTypeId;
-                                  }
-                                  if (int.parse(_jumlahPesertaController.text) != data.countParticipant){
-                                    countParticipant = int.parse(_jumlahPesertaController.text);
-                                  }
-                                  if (_selectedStatusId != data.statusId){
-                                    statusId = _selectedStatusId;
-                                  }
-                                  context.read<EventBloc>().add(UpdateEventRequested(
-                                    data.id, 
-                                    eventName,
-                                    eventLocation,
-                                    eventDateStart,
-                                    eventDateEnd,
-                                    description,
-                                    eventTypeId,
-                                    countParticipant,
-                                    statusId
-                                  ));
-                                }
-                              },
-                              icon: const Icon(Icons.save),
-                              label: Text(state.loadingType["update"] == true ? 'Mohon tunggu...' : 'Update Event'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: CustomColors.oranges,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                },
+                                icon: const Icon(Icons.save),
+                                label: Text(state.loadingType["update"] == true ? 'Mohon tunggu...' : 'Update Event'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: CustomColors.oranges,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                CustomDialog.show(
-                                  context,
-                                  icon: Icons.delete,
-                                  iconColor: Colors.red,
-                                  title: "Konfirmasi Hapus Pengajuan Event",
-                                  message: "Apakah anda yakin menghapus data pengajuan ini?",
-                                  confirmText: "Ya, hapus",
-                                  confirmColor: Colors.red,
-                                  cancelText: "Batal",
-                                  cancelColor: Colors.black,
-                                  onConfirm: () {
-                                    context.read<EventBloc>().add(DeleteEventRequested(data.id));
-                                  },
-                                );
-                              },
-                              icon: const Icon(Icons.delete),
-                              label: Text(state.loadingType["delete"] == true ? 'Mohon tunggu...' : 'Hapus Event'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.red,
-                                side: const BorderSide(color: Colors.red),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  CustomDialog.show(
+                                    context,
+                                    icon: Icons.delete,
+                                    iconColor: Colors.red,
+                                    title: "Konfirmasi Hapus Pengajuan Event",
+                                    message: "Apakah anda yakin menghapus data pengajuan ini?",
+                                    confirmText: "Ya, hapus",
+                                    confirmColor: Colors.red,
+                                    cancelText: "Batal",
+                                    cancelColor: Colors.black,
+                                    onConfirm: () {
+                                      context.read<EventBloc>().add(DeleteEventRequested(data.id));
+                                    },
+                                  );
+                                },
+                                icon: const Icon(Icons.delete),
+                                label: Text(state.loadingType["delete"] == true ? 'Mohon tunggu...' : 'Hapus Event'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                  side: const BorderSide(color: Colors.red),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ],
               
                       const SizedBox(height: 40),
                       const Divider(thickness: 2),
@@ -743,17 +788,21 @@ class _EventDetailPageState extends State<EventDetailPage> {
     FormFieldValidator<String>? validator,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
+    bool enabled = true,
   }) {
     return TextFormField(
       controller: controller,
       readOnly: readOnly,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
+      mouseCursor: enabled
+        ? SystemMouseCursors.text
+        : SystemMouseCursors.basic,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: enabled ? Colors.grey[50] : Colors.grey[300],
       ),
       validator: validator,
       maxLines: maxLines,
@@ -764,15 +813,19 @@ class _EventDetailPageState extends State<EventDetailPage> {
     required TextEditingController controller,
     required String label,
     required VoidCallback? onTap,
+    bool enabled = true,
   }) {
     return TextFormField(
       controller: controller,
+      mouseCursor: enabled
+        ? SystemMouseCursors.text
+        : SystemMouseCursors.basic,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: const Icon(Icons.calendar_today),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: enabled ? Colors.grey[50] : Colors.grey[300],
       ),
       readOnly: true,
       onTap: onTap,
