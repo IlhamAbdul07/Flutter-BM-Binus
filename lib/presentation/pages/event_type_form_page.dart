@@ -63,6 +63,7 @@ class _EventTypeFormPageState extends State<EventTypeFormPage> {
       body: BlocConsumer<EventTypeBloc, EventTypeState>(
         listener: (context, state) async {
           if (state.isSuccessTrx){
+            state.copyWith(loadingType: {state.typeTrx ?? '': false});
             CustomSnackBar.show(
               context,
               icon: Icons.check_circle,
@@ -85,6 +86,7 @@ class _EventTypeFormPageState extends State<EventTypeFormPage> {
               context.pop(true);
             }
           } else if (state.errorTrx != null){
+            state.copyWith(loadingType: {state.typeTrx ?? '': false});
             CustomSnackBar.show(
               context,
               icon: Icons.error,
@@ -257,7 +259,7 @@ class _EventTypeFormPageState extends State<EventTypeFormPage> {
                                   }
                                 },
                                 icon: const Icon(Icons.check),
-                                label: const Text('Simpan'),
+                                label: Text(state.loadingType["create"] == true ? 'Mohon tunggu...' : 'Simpan'),
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                 ),
@@ -286,7 +288,7 @@ class _EventTypeFormPageState extends State<EventTypeFormPage> {
                                       );
                                     },
                                     icon: const Icon(Icons.delete),
-                                    label: const Text('Hapus'),
+                                    label: Text(state.loadingType["delete"] == true ? 'Mohon tunggu...' : 'Hapus'),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: Colors.red,
                                       side: const BorderSide(color: Colors.red),
@@ -312,7 +314,7 @@ class _EventTypeFormPageState extends State<EventTypeFormPage> {
                                       }
                                     },
                                     icon: const Icon(Icons.save),
-                                    label: const Text('Update'),
+                                    label: Text(state.loadingType["update"] == true ? 'Mohon tunggu...' : 'Update'),
                                     style: ElevatedButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 16,

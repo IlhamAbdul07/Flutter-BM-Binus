@@ -15,12 +15,7 @@ class PriorityBloc extends Bloc<PriorityEvent, PriorityState> {
     emit(state.copyWith(isLoading: true));
 
     try {
-      // TODO: Implement API call untuk save priority setting
-      // await apiService.updatePriority(event.isEnabled);
-
-      // Dummy delay untuk simulasi API call
       await Future.delayed(const Duration(milliseconds: 500));
-
       emit(
         state.copyWith(
           usePriority: event.isEnabled,
@@ -40,15 +35,10 @@ class PriorityBloc extends Bloc<PriorityEvent, PriorityState> {
     emit(state.copyWith(isLoading: true));
 
     try {
-      // TODO: Implement API call untuk load priority setting
-      // final priority = await apiService.getPriority();
-
-      // Dummy delay untuk simulasi API call
       await Future.delayed(const Duration(milliseconds: 500));
-
       emit(
         state.copyWith(
-          usePriority: false, // nanti ganti dengan data dari API
+          usePriority: false,
           isLoading: false,
           error: null,
         ),

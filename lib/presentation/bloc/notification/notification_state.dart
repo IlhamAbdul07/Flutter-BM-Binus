@@ -61,6 +61,7 @@ class NotificationState extends Equatable {
     return copyWith(requestId: reqId);
   }
 
+  // need more optimization
   // Method untuk copy state dengan perubahan tertentu
   NotificationState copyWith({
     List<NotificationModel>? notifications,

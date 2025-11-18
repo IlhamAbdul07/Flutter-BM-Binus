@@ -36,6 +36,7 @@ class StatusState extends Equatable {
     return copyWith(isLoading: false, errorFetch: message);
   }
 
+  // need more optimization
   StatusState copyWith({
     List<Status>? status,
     bool? isLoading,

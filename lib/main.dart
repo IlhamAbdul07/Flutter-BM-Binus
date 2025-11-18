@@ -1,8 +1,6 @@
 import 'package:bm_binus/presentation/bloc/auth/auth_event.dart';
 import 'package:bm_binus/presentation/bloc/notification/notification_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
-import 'package:bm_binus/presentation/bloc/priority/priority_bloc.dart';
-import 'package:bm_binus/presentation/bloc/priority/priority_event.dart';
 import 'package:bm_binus/presentation/cubit/ui_cubit.dart';
 import 'package:bm_binus/presentation/routes/app_router.dart';
 import 'package:bm_binus/presentation/bloc/auth/auth_bloc.dart';
@@ -29,9 +27,6 @@ class MyApp extends StatelessWidget {
         BlocProvider.value(value: authBloc),
         BlocProvider(create: (_) => UiCubit()),
         BlocProvider(create: (context) => NotificationBloc()),
-        BlocProvider<PriorityBloc>(
-          create: (context) => PriorityBloc()..add(LoadPriorityEvent()),
-        ),
         BlocProvider(create: (context) => EventBloc()),
       ],
       child: MaterialApp.router(

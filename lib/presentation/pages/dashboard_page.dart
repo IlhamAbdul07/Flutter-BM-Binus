@@ -33,12 +33,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, authState) {
-        return BlocProvider(
-          create: (_) => DashboardBloc(),
-          child: BlocBuilder<DashboardBloc, DashboardState>(
-            builder: (context, state){
+    return BlocProvider(
+      create: (_) => DashboardBloc(),
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState){
+          return BlocBuilder<DashboardBloc, DashboardState>(
+            builder: (context, state) {
               if (!_hasFetched && authState.roleId != null) {
                 context.read<DashboardBloc>().add(FetchDashboardData(authState.roleId!));
                 _hasFetched = true;
@@ -63,6 +63,12 @@ class _DashboardPageState extends State<DashboardPage> {
                     '⏳ Mohon tunggu, sedang memuat data...',
                     style: TextStyle(fontSize: 16, color: Colors.black),
                   ),
+                );
+              }
+
+              if (authState.roleId == null || authState.roleName == null) {
+                return const Center(
+                  child: Text("Memuat data pengguna..."),
                 );
               }
 
@@ -154,10 +160,10 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ],
               );
-            },
-          )
-        );
-      },
+            }
+          );
+        },
+      )
     );
   }
 

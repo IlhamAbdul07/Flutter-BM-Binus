@@ -41,6 +41,7 @@ class EventTypeBloc extends Bloc<EventTypeEvent, EventTypeState> {
     });
 
     on<CreateEventTypeRequested>((event, emit) async {
+      emit(state.setLoadingType("create", true));
       try {
         final response = await ApiService.handleEventType(method: 'POST', data: {
           'name': event.name,
@@ -81,6 +82,7 @@ class EventTypeBloc extends Bloc<EventTypeEvent, EventTypeState> {
     });
 
     on<UpdateEventTypeRequested>((event, emit) async {
+      emit(state.setLoadingType("update", true));
       try {
         Map<String, dynamic> data = {};
         if (event.name != null){
@@ -125,6 +127,7 @@ class EventTypeBloc extends Bloc<EventTypeEvent, EventTypeState> {
     });
 
     on<DeleteEventTypeRequested>((event, emit) async {
+      emit(state.setLoadingType("delete", true));
       try {
         final response = await ApiService.handleEventType(method: 'DELETE', eventTypeId: event.eventTypeId);
 

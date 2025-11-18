@@ -43,6 +43,7 @@ class UserBloc extends Bloc<UserEvent, UsersState> {
     });
 
     on<CreateUserRequested>((event, emit) async {
+      emit(state.setLoadingType("create", true));
       try {
         final response = await ApiService.handleUser(method: 'POST', data: {
           'name': event.name,
@@ -90,6 +91,7 @@ class UserBloc extends Bloc<UserEvent, UsersState> {
     });
 
     on<UpdateUserRequested>((event, emit) async {
+      emit(state.setLoadingType("update", true));
       try {
         Map<String, dynamic> data = {};
         if (event.name != null){
@@ -140,6 +142,7 @@ class UserBloc extends Bloc<UserEvent, UsersState> {
     });
 
     on<DeleteUserRequested>((event, emit) async {
+      emit(state.setLoadingType("delete", true));
       try {
         final response = await ApiService.handleUser(method: 'DELETE', userId: event.userId);
 

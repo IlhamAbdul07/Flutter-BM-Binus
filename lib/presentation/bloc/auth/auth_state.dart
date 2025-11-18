@@ -23,6 +23,7 @@ class AuthState extends Equatable {
     this.errorForgot,
   });
 
+  // need more optimization
   AuthState copyWith({
     bool? isAuthenticated,
     final int? id,

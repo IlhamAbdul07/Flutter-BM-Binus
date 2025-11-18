@@ -73,6 +73,7 @@ class EventState extends Equatable {
     return copyWith(loadingType: newMap);
   }
 
+  // need more optimization
   EventState copyWith({
     List<EventModel>? events,
     EventDetailModel? singleEvent,

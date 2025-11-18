@@ -10,6 +10,8 @@ import 'package:bm_binus/presentation/bloc/file/file_bloc.dart';
 import 'package:bm_binus/presentation/bloc/file/file_event.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_bloc.dart';
 import 'package:bm_binus/presentation/bloc/pengajuan/event_event.dart';
+import 'package:bm_binus/presentation/bloc/priority/priority_bloc.dart';
+import 'package:bm_binus/presentation/bloc/priority/priority_event.dart';
 import 'package:bm_binus/presentation/bloc/status/status_bloc.dart';
 import 'package:bm_binus/presentation/bloc/status/status_event.dart';
 import 'package:bm_binus/presentation/bloc/user/user_bloc.dart';
@@ -72,7 +74,12 @@ GoRouter createRouter(AuthBloc authBloc) {
           ),
           GoRoute(
             path: '/pengajuan',
-            builder: (context, state) => const PengajuanPage(),
+            builder: (context, state) {
+              return BlocProvider(
+                create: (_) => PriorityBloc()..add(LoadPriorityEvent()),
+                child: const PengajuanPage(),
+              );
+            }
           ),
           GoRoute(
             path: '/eventtype',

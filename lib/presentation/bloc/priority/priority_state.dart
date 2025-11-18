@@ -11,6 +11,7 @@ class PriorityState extends Equatable {
     this.error,
   });
 
+  // need more optimization
   PriorityState copyWith({bool? usePriority, bool? isLoading, String? error}) {
     return PriorityState(
       usePriority: usePriority ?? this.usePriority,

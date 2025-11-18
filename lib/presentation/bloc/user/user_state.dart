@@ -10,6 +10,7 @@ class UsersState extends Equatable {
   final bool isSuccessTrx;
   final String? errorTrx;
   final String? typeTrx;
+  final Map<String, bool> loadingType;
 
   const UsersState({
     this.users = const [],
@@ -20,6 +21,7 @@ class UsersState extends Equatable {
     required this.isSuccessTrx,
     this.errorTrx,
     this.typeTrx,
+    this.loadingType = const {},
   });
 
   factory UsersState.initial() {
@@ -32,6 +34,7 @@ class UsersState extends Equatable {
       isSuccessTrx: false,
       errorTrx: null,
       typeTrx: null,
+      loadingType: {},
     );
   }
 
@@ -55,6 +58,13 @@ class UsersState extends Equatable {
     return copyWith(isLoading: loading);
   }
 
+  UsersState setLoadingType(String key, bool value) {
+    final newMap = Map<String, bool>.from(loadingType);
+    newMap[key] = value;
+    return copyWith(loadingType: newMap);
+  }
+
+  // need more optimization
   UsersState copyWith({
     List<Users>? users,
     bool? isLoading,
@@ -64,6 +74,7 @@ class UsersState extends Equatable {
     bool? isSuccessTrx,
     String? errorTrx,
     String? typeTrx,
+    Map<String, bool>? loadingType,
   }) {
     return UsersState(
       users: users ?? this.users,
@@ -74,9 +85,10 @@ class UsersState extends Equatable {
       isSuccessTrx: isSuccessTrx ?? this.isSuccessTrx,
       errorTrx: errorTrx,
       typeTrx: typeTrx,
+      loadingType: loadingType ?? this.loadingType,
     );
   }
 
   @override
-  List<Object?> get props => [users, isLoading, errorFetch, isChangePw, errorChangePw, isSuccessTrx, errorTrx, typeTrx];
+  List<Object?> get props => [users, isLoading, errorFetch, isChangePw, errorChangePw, isSuccessTrx, errorTrx, typeTrx, loadingType];
 }
