@@ -76,9 +76,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     switch (status.toLowerCase()) {
       case "pengajuan":
         return Colors.orange;
-      case "proses":
-        return Colors.blue;
       case "validasi":
+        return Colors.blue;
+      case "proses":
         return Colors.purple;
       case "finalisasi":
         return Colors.teal;

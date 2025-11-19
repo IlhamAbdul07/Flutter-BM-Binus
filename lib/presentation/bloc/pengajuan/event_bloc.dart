@@ -44,7 +44,8 @@ class EventBloc extends Bloc<EventEvent, EventState> {
                     userId: item['user']?['id'] ?? 0,
                     userName: item['user']?['name'] ?? '',
                     createdAt: DateTime.parse(item['created_at']),
-                    ahpScore: item['ahp_score']?['percent'] ?? '',
+                    ahpPercent: item['ahp_score']?['percent'] ?? '',
+                    ahpRaw: item['ahp_score']?['raw'] ?? 0.0,
                   ))
               .toList();
 

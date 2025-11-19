@@ -605,7 +605,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                               prefixIcon: Icon(Icons.flag),
                               filled: true,
                               labelStyle: TextStyle(color: Colors.black),
-                              fillColor: isAvailable ? Colors.grey[50] : Colors.grey[300],
+                              fillColor: canEditStatus ? Colors.grey[50] : Colors.grey[300],
                             ),
                             items: status.map((et) {
                               final color = _getStatusColor(et.name);

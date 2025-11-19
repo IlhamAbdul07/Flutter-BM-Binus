@@ -554,26 +554,276 @@ class _SectionApplyAHPState extends State<_SectionApplyAHP> {
   bool _formSubmitted = false;
 
   final Map<String, int?> _complexityValues = {
-    'Event A': null,
-    'Event B': null,
-    'Event C': null,
+    'Event A': 1,
+    'Event B': 1,
+    'Event C': 1,
   };
 
-  void _submitForm() {
-    final allFilled = _complexityValues.values.every((v) => v != null);
-    if (allFilled) {
-      setState(() => _formSubmitted = true);
-    } else {
-      CustomSnackBar.show(
-        context, 
-        icon: Icons.info, 
-        title: "Uncompleted Data", 
-        message: 'Mohon isi semua nilai complexity sebelum melanjutkan.', 
-        color: Colors.orange
-      );
-    }
+  // --- DATA STATIC EVENT DEFAULT ---
+  final List<Map<String, dynamic>> _defaultEvents = [
+    {
+      "no": 1,
+      "name": "Event A",
+      "type": "Seminar",
+      "pengajuan": "12 Nov 2024",
+      "mulai": "20 Nov 2024",
+      "participant": 50
+    },
+    {
+      "no": 2,
+      "name": "Event B",
+      "type": "Workshop",
+      "pengajuan": "10 Nov 2024",
+      "mulai": "25 Nov 2024",
+      "participant": 40
+    },
+    {
+      "no": 3,
+      "name": "Event C",
+      "type": "Competition",
+      "pengajuan": "8 Nov 2024",
+      "mulai": "30 Nov 2024",
+      "participant": 100
+    },
+  ];
+
+  // --- DATA STATIC EVENT SETELAH AHP ---
+  final List<Map<String, dynamic>> _ahpEvents = [
+    {
+      "no": 1,
+      "name": "Event C",
+      "type": "Competition",
+      "pengajuan": "8 Nov 2024",
+      "mulai": "30 Nov 2024",
+      "participant": 100,
+      "ahp": "75%",
+    },
+    {
+      "no": 2,
+      "name": "Event A",
+      "type": "Seminar",
+      "pengajuan": "12 Nov 2024",
+      "mulai": "20 Nov 2024",
+      "participant": 50,
+      "ahp": "65%",
+    },
+    {
+      "no": 3,
+      "name": "Event B",
+      "type": "Workshop",
+      "pengajuan": "10 Nov 2024",
+      "mulai": "25 Nov 2024",
+      "participant": 40,
+      "ahp": "55%",
+    },
+  ];
+
+  // =====================================================================
+  // ➤ FUNGSI OPEN DIALOG AHP
+  // =====================================================================
+  Future<bool?> _openComplexityDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text("Simulasi Pengisian Complexity Event"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: _complexityValues.keys.map((event) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(event),
+                      SizedBox(
+                        width: 160,
+                        child: Slider(
+                          value: (_complexityValues[event] ?? 1).toDouble(),
+                          min: 1,
+                          max: 9,
+                          divisions: 8,
+                          label: "${_complexityValues[event]}",
+                          onChanged: (val) {
+                            setStateDialog(() {
+                              _complexityValues[event] = val.toInt();
+                            });
+                          },
+                        ),
+                      )
+                    ],
+                  );
+                }).toList(),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, false);
+                  },
+                  child: const Text("Batal"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final allFilled =
+                        _complexityValues.values.every((v) => v != null);
+
+                    if (!allFilled) {
+                      CustomSnackBar.show(
+                        context,
+                        icon: Icons.info,
+                        title: "Uncompleted Data",
+                        message: 'Mohon isi semua nilai complexity sebelum melanjutkan.',
+                        color: Colors.orange,
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      _formSubmitted = true;
+                      _complexityValues.updateAll((key, value) => 1);
+                    });
+
+                    Navigator.pop(context, true);
+                  },
+                  child: const Text("Submit"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
+  // =====================================================================
+  // ➤ HELPER TABLE CELL
+  // =====================================================================
+  Widget _tblHeader(String text) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _tblCell(dynamic value) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Text("$value"),
+    );
+  }
+
+  // =====================================================================
+  // ➤ TABEL DEFAULT
+  // =====================================================================
+  Widget _buildDefaultEventTable() {
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        const Text("Daftar Event", style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+
+        Table(
+          border: TableBorder.all(color: Colors.grey.shade300),
+          columnWidths: const {
+            0: FixedColumnWidth(40),
+            1: FlexColumnWidth(2),
+            2: FlexColumnWidth(2),
+            3: FlexColumnWidth(2),
+            4: FlexColumnWidth(2),
+            5: FlexColumnWidth(1),
+          },
+          children: [
+            TableRow(
+              decoration: const BoxDecoration(color: Color(0xFF133017)),
+              children: [
+                _tblHeader("No"),
+                _tblHeader("Nama Event"),
+                _tblHeader("Jenis Event"),
+                _tblHeader("Tgl Pengajuan"),
+                _tblHeader("Tgl Mulai"),
+                _tblHeader("Partisipan"),
+              ],
+            ),
+            ..._defaultEvents.map((e) {
+              return TableRow(
+                children: [
+                  _tblCell(e["no"]),
+                  _tblCell(e["name"]),
+                  _tblCell(e["type"]),
+                  _tblCell(e["pengajuan"]),
+                  _tblCell(e["mulai"]),
+                  _tblCell(e["participant"]),
+                ],
+              );
+            }),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // =====================================================================
+  // ➤ TABEL AHP RESULT
+  // =====================================================================
+  Widget _buildAhpEventTable() {
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        const Text("Hasil Prioritas AHP", style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+
+        Table(
+          border: TableBorder.all(color: Colors.grey.shade300),
+          columnWidths: const {
+            0: FixedColumnWidth(40),
+            1: FixedColumnWidth(120),
+            2: FlexColumnWidth(2),
+            3: FlexColumnWidth(2),
+            4: FlexColumnWidth(2),
+            5: FixedColumnWidth(90),
+            6: FixedColumnWidth(90),
+          },
+          children: [
+            TableRow(
+              decoration: const BoxDecoration(color: Color(0xFF133017)),
+              children: [
+                _tblHeader("No"),
+                _tblHeader("Nama Event"),
+                _tblHeader("Event Type"),
+                _tblHeader("Tgl Pengajuan"),
+                _tblHeader("Tgl Mulai"),
+                _tblHeader("Partisipan"),
+                _tblHeader("AHP Score"),
+              ],
+            ),
+            ..._ahpEvents.map((e) {
+              return TableRow(
+                children: [
+                  _tblCell(e["no"]),
+                  _tblCell(e["name"]),
+                  _tblCell(e["type"]),
+                  _tblCell(e["pengajuan"]),
+                  _tblCell(e["mulai"]),
+                  _tblCell(e["participant"]),
+                  _tblCell(e["ahp"]),
+                ],
+              );
+            }),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // =====================================================================
+  // ➤ BUILD UI
+  // =====================================================================
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -584,12 +834,13 @@ class _SectionApplyAHPState extends State<_SectionApplyAHP> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ------------------- TITLE -------------------
             Row(
               children: const [
                 Icon(Icons.auto_graph, color: Color(0xFF133017)),
                 SizedBox(width: 8),
                 Text(
-                  "Penerapan AHP dalam Sistem",
+                  "Simulasi Penerapan AHP dalam Sistem",
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -598,7 +849,10 @@ class _SectionApplyAHPState extends State<_SectionApplyAHP> {
                 ),
               ],
             ),
+
             const SizedBox(height: 8),
+
+            // ------------------- DESKRIPSI -------------------
             Text(
               "Dalam sistem ini, AHP digunakan untuk membantu tim Building Management BINUS "
               "menentukan event mana yang lebih diprioritaskan berdasarkan kriteria yang telah ditentukan. "
@@ -606,125 +860,38 @@ class _SectionApplyAHPState extends State<_SectionApplyAHP> {
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: widget.isMobile ? 14 : 16, height: 1.5),
             ),
+
             const SizedBox(height: 12),
+
+            // ------------------- TOGGLE -------------------
             Row(
               children: [
                 const Text("Aktifkan Perhitungan AHP"),
                 Switch(
                   activeColor: const Color(0xFF133017),
                   value: _useAHP,
-                  onChanged: (val) {
+                  onChanged: (val) async {
                     setState(() {
                       _useAHP = val;
-                      _formSubmitted = false; // reset form ketika toggle dimatikan
+                      _formSubmitted = false;
                     });
+
+                    if (val == true) {
+                      final result = await _openComplexityDialog();
+
+                      if (result != true) {
+                        // Jika user batal → kembalikan toggle ke OFF
+                        setState(() {
+                          _useAHP = false;
+                        });
+                      }
+                    }
                   },
                 ),
               ],
             ),
 
-            // --- tampilkan form simulasi jika toggle aktif tapi belum submit ---
-            if (_useAHP && !_formSubmitted)
-              AnimatedOpacity(
-                opacity: _useAHP ? 1 : 0,
-                duration: const Duration(milliseconds: 400),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Divider(),
-                    const Text(
-                      "Simulasi Pengisian Complexity Event",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF133017),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Table(
-                      border: TableBorder.all(color: Colors.grey.shade300),
-                      columnWidths: const {
-                        0: FlexColumnWidth(2),
-                        1: FlexColumnWidth(1),
-                      },
-                      children: [
-                        const TableRow(
-                          decoration: BoxDecoration(color: Color(0xFF133017)),
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text(
-                                "Nama Event",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text(
-                                "Complexity (1-9)",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        ..._complexityValues.keys.map(
-                          (event) => TableRow(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(event),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: DropdownButton<int>(
-                                  value: _complexityValues[event],
-                                  isExpanded: true,
-                                  hint: const Text("Pilih"),
-                                  items: List.generate(
-                                    9,
-                                    (i) => DropdownMenuItem(
-                                      value: i + 1,
-                                      child: Text("${i + 1}"),
-                                    ),
-                                  ),
-                                  onChanged: (val) {
-                                    setState(() {
-                                      _complexityValues[event] = val;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton.icon(
-                        onPressed: _submitForm,
-                        style: ElevatedButton.styleFrom(
-                          iconColor: Colors.white,
-                          backgroundColor: const Color(0xFF133017),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        icon: const Icon(Icons.check_circle_outline),
-                        label: const Text("Submit Simulasi", style: TextStyle(color: Colors.white),),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            // --- tampilkan hasil AHP aktif setelah form submit ---
+            // ------------------- MESSAGE AHP -------------------
             if (_useAHP && _formSubmitted)
               AnimatedOpacity(
                 opacity: 1,
@@ -746,6 +913,13 @@ class _SectionApplyAHPState extends State<_SectionApplyAHP> {
                   ),
                 ),
               ),
+            
+            // ------------------- TABEL DEFAULT -------------------
+            if (!_useAHP || !_formSubmitted) _buildDefaultEventTable(),
+
+            // ------------------- TABEL AHP -------------------
+            if (_useAHP && _formSubmitted) _buildAhpEventTable(),
+
           ],
         ),
       ),

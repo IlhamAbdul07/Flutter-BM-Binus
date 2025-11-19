@@ -169,8 +169,9 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                               final hasil = await PriorityDialog.show(context, events: data);
                                               if (hasil != null) {
                                                 final encodedComplexity = Uri.encodeComponent(jsonEncode(hasil));
-                                                final authState = context.read<AuthBloc>().state;
                                                 context.read<PriorityBloc>().add(TogglePriorityEvent(true));
+                                                await Future.delayed(const Duration(seconds: 1));
+                                                final authState = context.read<AuthBloc>().state;
                                                 _loadEventsByRole(authState.roleName!, authState.id, ahp: "yes", complexity: encodedComplexity);
                                                 await Future.delayed(const Duration(seconds: 1));
                                                 CustomSnackBar.show(
@@ -182,9 +183,10 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                 );
                                               }
                                             } else {
+                                              context.read<PriorityBloc>().add(TogglePriorityEvent(false));
+                                              await Future.delayed(const Duration(seconds: 1));
                                               final authState = context.read<AuthBloc>().state;
                                               _loadEventsByRole(authState.roleName!, authState.id);
-                                              context.read<PriorityBloc>().add(TogglePriorityEvent(false));
                                             }
                                           },
                                     label: Text(
@@ -248,6 +250,8 @@ class _PengajuanPageState extends State<PengajuanPage> {
                 if (authState.roleName == 'Admin ISS') {
                   data = data.where((e) => e.statusId == 3 || e.statusId == 4 || e.statusId == 5).toList();
                 }
+
+                final bool hasAHPScore = data.any((e) => e.ahpPercent != '');
  
                 if (data.isEmpty) {
                   return Center(
@@ -278,7 +282,8 @@ class _PengajuanPageState extends State<PengajuanPage> {
                     children: [
                       Expanded(
                         child: Card(
-                          elevation: 2,
+                          shadowColor: Colors.black,
+                          elevation: 6,
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               // Hitung lebar scrollable columns
@@ -289,28 +294,46 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                     (sum, col) => sum + col.width,
                                   );
  
-                              // Controller untuk sinkronisasi scroll
                               final ScrollController horizontalController =
                                   ScrollController();
                               final ScrollController verticalController =
                                   ScrollController();
-                              final ScrollController frozenVerticalController =
-                                  ScrollController();
+                              final ScrollController frozenStatusController = ScrollController();
+                              final ScrollController frozenAhpController = ScrollController();
  
-                              // Listener untuk sinkronisasi scroll vertikal
                               verticalController.addListener(() {
-                                if (frozenVerticalController.hasClients) {
-                                  frozenVerticalController.jumpTo(
-                                    verticalController.offset,
-                                  );
+                                if (frozenStatusController.hasClients) {
+                                  frozenStatusController.jumpTo(verticalController.offset);
                                 }
                               });
- 
-                              frozenVerticalController.addListener(() {
+
+                              frozenStatusController.addListener(() {
                                 if (verticalController.hasClients) {
-                                  verticalController.jumpTo(
-                                    frozenVerticalController.offset,
-                                  );
+                                  verticalController.jumpTo(frozenStatusController.offset);
+                                }
+                              });
+
+                              verticalController.addListener(() {
+                                if (frozenAhpController.hasClients) {
+                                  frozenAhpController.jumpTo(verticalController.offset);
+                                }
+                              });
+
+                              frozenAhpController.addListener(() {
+                                if (verticalController.hasClients) {
+                                  verticalController.jumpTo(frozenAhpController.offset);
+                                }
+                              });
+
+                              frozenStatusController.addListener(() {
+                                if (frozenAhpController.hasClients) {
+                                  frozenAhpController.jumpTo(frozenStatusController.offset);
+                                }
+                              });
+
+                              frozenAhpController.addListener(() {
+                                if (frozenStatusController.hasClients) {
+                                  frozenStatusController.jumpTo(frozenAhpController.offset);
                                 }
                               });
  
@@ -398,6 +421,8 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                                       onTap: () async {
                                                         final result = await context.push('/event-detail', extra: item.id);
                                                         if (result == true && context.mounted) {
+                                                          context.read<PriorityBloc>().add(TogglePriorityEvent(false));
+                                                          await Future.delayed(const Duration(seconds: 1));
                                                           final authState = context.read<AuthBloc>().state;
                                                           _loadEventsByRole(authState.roleName!, authState.id);
                                                         }
@@ -614,118 +639,229 @@ class _PengajuanPageState extends State<PengajuanPage> {
                                   ),
  
                                   // ✅ Frozen "Status" Column (tetap di kanan)
-                                  Container(
-                                    width: columns[8].width,
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        left: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 2,
+                                  Row(
+                                    children: [
+                                      // ======================
+                                      // === KOLOM STATUS ====
+                                      // ======================
+                                      Container(
+                                        width: columns[8].width,
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            left: BorderSide(
+                                              color: Colors.grey.shade300,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          color: Colors.grey.shade50,
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            // Header Status
+                                            Container(
+                                              height: rowHeight,
+                                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.shade100,
+                                                border: Border(
+                                                  bottom: BorderSide(
+                                                    color: Colors.grey.shade300,
+                                                    width: 2,
+                                                  ),
+                                                ),
+                                              ),
+                                              child: const Align(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  'Status',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+
+                                            // Status Cells
+                                            Expanded(
+                                              child: ListView.builder(
+                                                controller: frozenStatusController,
+                                                physics: const ClampingScrollPhysics(),
+                                                itemCount: data.length,
+                                                itemBuilder: (context, index) {
+                                                  final item = data[index];
+                                                  return InkWell(
+                                                    onTap: () async {
+                                                      final result = await context.push('/event-detail', extra: item.id);
+                                                      if (result == true && context.mounted) {
+                                                        context.read<PriorityBloc>().add(TogglePriorityEvent(false));
+                                                        await Future.delayed(const Duration(seconds: 1));
+                                                        final authState = context.read<AuthBloc>().state;
+                                                        _loadEventsByRole(authState.roleName!, authState.id);
+                                                      }
+                                                    },
+                                                    hoverColor: Colors.orange.shade50,
+                                                    child: Container(
+                                                      height: rowHeight,
+                                                      padding: const EdgeInsets.symmetric(
+                                                        horizontal: 8.0,
+                                                        vertical: 12.0,
+                                                      ),
+                                                      decoration: BoxDecoration(
+                                                        border: Border(
+                                                          bottom: BorderSide(
+                                                            color: Colors.grey.shade200,
+                                                            width: 1,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      child: Center(
+                                                        child: Container(
+                                                          padding: const EdgeInsets.symmetric(
+                                                            vertical: 6,
+                                                            horizontal: 12,
+                                                          ),
+                                                          decoration: BoxDecoration(
+                                                            color: _getStatusColor(item.statusName),
+                                                            borderRadius: BorderRadius.circular(12),
+                                                          ),
+                                                          child: Text(
+                                                            item.statusName.toUpperCase(),
+                                                            style: const TextStyle(
+                                                              color: Colors.white,
+                                                              fontWeight: FontWeight.bold,
+                                                              fontSize: 11,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      color: Colors.grey.shade50,
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        // Header Status
+
+                                      // ====================================
+                                      // === KOLOM AHP SCORE (OPTIONAL) =====
+                                      // ====================================
+                                      if (hasAHPScore)
                                         Container(
-                                          height: rowHeight,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8.0,
-                                          ),
+                                          width: 110, // boleh sesuaikan
                                           decoration: BoxDecoration(
-                                            color: Colors.grey.shade100,
                                             border: Border(
-                                              bottom: BorderSide(
+                                              left: BorderSide(
                                                 color: Colors.grey.shade300,
                                                 width: 2,
                                               ),
                                             ),
+                                            color: Colors.grey.shade50,
                                           ),
-                                          child: const Align(
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              'Status',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        // Status Cells
-                                        Expanded(
-                                          child: ListView.builder(
-                                            controller:
-                                                frozenVerticalController,
-                                            physics:
-                                                const ClampingScrollPhysics(),
-                                            itemCount: data.length,
-                                            itemBuilder: (context, index) {
-                                              final item = data[index];
-                                              return InkWell(
-                                                onTap: () async {
-                                                  final result = await context.push('/event-detail', extra: item.id);
-                                                  if (result == true && context.mounted) {
-                                                    final authState = context.read<AuthBloc>().state;
-                                                    _loadEventsByRole(authState.roleName!, authState.id);
-                                                  }
-                                                },
-                                                hoverColor:
-                                                    Colors.orange.shade50,
-                                                child: Container(
-                                                  height: rowHeight,
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 8.0,
-                                                        vertical: 12.0,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    border: Border(
-                                                      bottom: BorderSide(
-                                                        color: Colors
-                                                            .grey
-                                                            .shade200,
-                                                        width: 1,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  child: Center(
-                                                    child: Container(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            vertical: 6,
-                                                            horizontal: 12,
-                                                          ),
-                                                      decoration: BoxDecoration(
-                                                        color: _getStatusColor(
-                                                          item.statusName,
-                                                        ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              12,
-                                                            ),
-                                                      ),
-                                                      child: Text(
-                                                        item.statusName
-                                                            .toUpperCase(),
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 11,
-                                                        ),
-                                                      ),
+                                          child: Column(
+                                            children: [
+                                              // Header AHP Score + ICON
+                                              Container(
+                                                height: rowHeight,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey.shade100,
+                                                  border: Border(
+                                                    bottom: BorderSide(
+                                                      color: Colors.grey.shade300,
+                                                      width: 2,
                                                     ),
                                                   ),
                                                 ),
-                                              );
-                                            },
+                                                alignment: Alignment.center,
+                                                child: const Row(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(Icons.auto_graph, size: 16, color: Colors.black87), // icon kecil
+                                                    SizedBox(width: 4),
+                                                    Text(
+                                                      'AHP Score',
+                                                      style: TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+
+                                              // Score cells
+                                              Expanded(
+                                                child: ListView.builder(
+                                                  controller: frozenAhpController,
+                                                  physics: const ClampingScrollPhysics(),
+                                                  itemCount: data.length,
+                                                  itemBuilder: (context, index) {
+                                                    final item = data[index];
+
+                                                    final ahpText = (item.ahpRaw == 0.0 || item.ahpRaw.isNaN)
+                                                        ? '-'
+                                                        : '${(item.ahpRaw * 100).toStringAsFixed(4)}%';
+
+                                                    // ========= NEW: Pewarnaan berdasarkan ranking merata =========
+                                                    final allValues = data.map((e) => e.ahpRaw).toList();
+                                                    final sorted = [...allValues]..sort((a, b) => b.compareTo(a));
+                                                    final rankIndex = sorted.indexOf(item.ahpRaw);
+                                                    final p = rankIndex / (sorted.length - 1); // 0.0 → 1.0
+                                                    late Color bgColor;
+                                                    if (p < 0.20) {
+                                                      bgColor = Colors.red.shade200;      // Top priority
+                                                    } else if (p < 0.40) {
+                                                      bgColor = Colors.orange.shade200;
+                                                    } else if (p < 0.60) {
+                                                      bgColor = Colors.yellow.shade200;
+                                                    } else if (p < 0.80) {
+                                                      bgColor = Colors.lightGreen.shade200;
+                                                    } else {
+                                                      bgColor = Colors.green.shade200;        // Lowest priority
+                                                    }
+
+                                                    // =============================================================
+
+                                                    return InkWell(
+                                                      onTap: () async {
+                                                        final result = await context.push('/event-detail', extra: item.id);
+                                                        if (result == true && context.mounted) {
+                                                          context.read<PriorityBloc>().add(TogglePriorityEvent(false));
+                                                          await Future.delayed(const Duration(seconds: 1));
+                                                          final authState = context.read<AuthBloc>().state;
+                                                          _loadEventsByRole(authState.roleName!, authState.id);
+                                                        }
+                                                      },
+                                                      child: Container(
+                                                        height: rowHeight,
+                                                        alignment: Alignment.center,
+                                                        decoration: BoxDecoration(
+                                                          color: bgColor,
+                                                          border: Border(
+                                                            bottom: BorderSide(
+                                                              color: Colors.grey.shade200,
+                                                              width: 1,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        child: Text(
+                                                          ahpText,
+                                                          style: const TextStyle(
+                                                            fontSize: 13,
+                                                            fontWeight: FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              )
+                                            ],
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
+                                    ],
+                                  )
                                 ],
                               );
                             },

@@ -11,7 +11,8 @@ class EventModel {
   final int userId;
   final String userName;
   final DateTime createdAt;
-  final String ahpScore;
+  final String ahpPercent;
+  final double ahpRaw;
 
   EventModel({
     required this.id,
@@ -26,7 +27,8 @@ class EventModel {
     required this.userId,
     required this.userName,
     required this.createdAt,
-    required this.ahpScore,
+    required this.ahpPercent,
+    required this.ahpRaw,
   });
 
   factory EventModel.fromMap(Map<String, dynamic> map) {
@@ -43,7 +45,8 @@ class EventModel {
       userId: map['user']?['id'] ?? 0,
       userName: map['user']?['name'] ?? '',
       createdAt: DateTime.parse(map['created_at']),
-      ahpScore: map['ahp_score']?['percent'] ?? '',
+      ahpPercent: map['ahp_score']?['percent'] ?? '',
+      ahpRaw: map['ahp_score']?['raw'] ?? 0.0,
     );
   }
 
@@ -61,7 +64,8 @@ class EventModel {
       'user_id': userId,
       'user_name': userName,
       'created_at': createdAt.toIso8601String(),
-      'ahp_score': ahpScore,
+      'ahp_percent': ahpPercent,
+      'ahp_raw': ahpRaw,
     };
   }
 }
