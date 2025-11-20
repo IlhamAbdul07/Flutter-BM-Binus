@@ -5,7 +5,6 @@ import 'package:bm_binus/presentation/bloc/auth/auth_state.dart';
 import 'package:bm_binus/presentation/cubit/ui_cubit.dart';
 import 'package:bm_binus/presentation/widgets/custom_snackbar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,8 +21,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final usernameController = TextEditingController();
-    final passwordController = TextEditingController();
     final isDesktop = MediaQuery.of(context).size.width > 800; // breakpoint
 
     return Scaffold(
@@ -35,6 +32,13 @@ class _LoginPageState extends State<LoginPage> {
         isDesktop,
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   Widget buildWidget(
